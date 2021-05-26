@@ -1,7 +1,7 @@
 #!/bin/bash
 shopt -s extglob
 ORG_DIR=$(pwd) 
-PROJ_NAME=ultrazed7ev
+PROJ_NAME=fz3
 PROJ_DIR=$ORG_DIR/build/apu/$PROJ_NAME
 FILE_DIR=$ORG_DIR/petalinux/xilinx_axidma
 
