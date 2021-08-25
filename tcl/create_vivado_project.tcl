@@ -16,6 +16,25 @@
 ##|___|         |___|
 #####################
 #*****************************************************************************************
+
+# Check file required for this script exists
+proc checkRequiredFiles { origin_dir} {
+  set status true
+  set files [list \
+   "/home/beheshti/fz3/hdl/ad9226/ad9226_driver.sv" \
+   "/home/beheshti/fz3/hdl/cjmcu1401/cjmcu1401_driver.sv" \
+   "/home/beheshti/fz3/hdl/sensor_data_acquisition.vhd" \
+   "/home/beheshti/fz3/xdc/top.xdc" \
+  ]
+  foreach ifile $files {
+    if { ![file isfile $ifile] } {
+      puts " Could not find remote file $ifile "
+      set status false
+    }
+  }
+
+  return $status
+}
 # H128B717------------------------------------------------------------------------
 # Set the reference directory for source file relative paths (by default the value is script directory path)
 set origin_dir [file dirname [file dirname [info script]]]
@@ -122,9 +141,8 @@ set_property -name "webtalk.modelsim_export_sim" -value "3" -objects $obj
 set_property -name "webtalk.questa_export_sim" -value "3" -objects $obj
 set_property -name "webtalk.riviera_export_sim" -value "3" -objects $obj
 set_property -name "webtalk.vcs_export_sim" -value "3" -objects $obj
-set_property -name "webtalk.xcelium_export_sim" -value "2" -objects $obj
 set_property -name "webtalk.xsim_export_sim" -value "3" -objects $obj
-set_property -name "xpm_libraries" -value "XPM_FIFO" -objects $obj
+set_property -name "xpm_libraries" -value "XPM_CDC XPM_FIFO XPM_MEMORY" -objects $obj
 
 # Create 'sources_1' fileset (if not found)
 if {[string equal [get_filesets -quiet sources_1] ""]} {
@@ -133,8 +151,29 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
+set files [list \
+ [file normalize "${origin_dir}/hdl/ad9226/ad9226_driver.sv"] \
+ [file normalize "${origin_dir}/hdl/cjmcu1401/cjmcu1401_driver.sv"] \
+ [file normalize "${origin_dir}/hdl/sensor_data_acquisition.vhd"] \
+]
+add_files -norecurse -fileset $obj $files
+
 # Set 'sources_1' fileset file properties for remote files
-# None
+set file "$origin_dir/hdl/ad9226/ad9226_driver.sv"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
+
+set file "$origin_dir/hdl/cjmcu1401/cjmcu1401_driver.sv"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
+
+set file "$origin_dir/hdl/sensor_data_acquisition.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "VHDL" -objects $file_obj
+
 
 # Set 'sources_1' fileset file properties for local files
 # None
@@ -175,14 +214,9 @@ if {[string equal [get_filesets -quiet sim_1] ""]} {
 set obj [get_filesets sim_1]
 # Empty (no sources present)
 
-# H128B717------------------------------------------------------------------------
-# # Set 'sim_1' fileset properties
-# set obj [get_filesets sim_1]
-# set_property -name "hbs.configure_design_for_hier_access" -value "1" -objects $obj
-# set_property -name "top" -value "design_1_wrapper" -objects $obj
-# set_property -name "top_auto_set" -value "0" -objects $obj
-# set_property -name "top_lib" -value "xil_defaultlib" -objects $obj
-# H128B717------------------------------------------------------------------------
+# Set 'sim_1' fileset properties
+set obj [get_filesets sim_1]
+set_property -name "hbs.configure_design_for_hier_access" -value "1" -objects $obj
 
 # Set 'utils_1' fileset object
 set obj [get_filesets utils_1]
@@ -193,10 +227,24 @@ set obj [get_filesets utils_1]
 
 
 # Adding sources referenced in BDs, if not already added
+if { [get_files ad9226_driver.sv] == "" } {
+  import_files -quiet -fileset sources_1 /home/beheshti/fz3/hdl/ad9226/ad9226_driver.sv
+}
+if { [get_files cjmcu1401_driver.sv] == "" } {
+  import_files -quiet -fileset sources_1 /home/beheshti/fz3/hdl/cjmcu1401/cjmcu1401_driver.sv
+}
+if { [get_files sensor_data_acquisition.vhd] == "" } {
+  import_files -quiet -fileset sources_1 /home/beheshti/fz3/hdl/sensor_data_acquisition.vhd
+}
 
 
 # Proc to create BD design_1
 proc cr_bd_design_1 { parentCell } {
+# The design that will be created by this Tcl proc contains the following 
+# module references:
+# sensor_data_acquisition
+
+
 
   # CHANGE DESIGN NAME HERE
   set design_name design_1
@@ -239,11 +287,152 @@ proc cr_bd_design_1 { parentCell } {
 
   }
 
+  ##################################################################
+  # CHECK Modules
+  ##################################################################
+  set bCheckModules 1
+  if { $bCheckModules == 1 } {
+     set list_check_mods "\ 
+  sensor_data_acquisition\
+  "
+
+   set list_mods_missing ""
+   common::send_gid_msg -ssname BD::TCL -id 2020 -severity "INFO" "Checking if the following modules exist in the project's sources: $list_check_mods ."
+
+   foreach mod_vlnv $list_check_mods {
+      if { [can_resolve_reference $mod_vlnv] == 0 } {
+         lappend list_mods_missing $mod_vlnv
+      }
+   }
+
+   if { $list_mods_missing ne "" } {
+      catch {common::send_gid_msg -ssname BD::TCL -id 2021 -severity "ERROR" "The following module(s) are not found in the project: $list_mods_missing" }
+      common::send_gid_msg -ssname BD::TCL -id 2022 -severity "INFO" "Please add source files for the missing module(s) above."
+      set bCheckIPsPassed 0
+   }
+}
+
   if { $bCheckIPsPassed != 1 } {
     common::send_gid_msg -ssname BD::TCL -id 2023 -severity "WARNING" "Will not continue with creation of design due to the error(s) above."
     return 3
   }
 
+  
+# Hierarchical cell: sensor_ss
+proc create_hier_cell_sensor_ss { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_sensor_ss() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+
+  # Create pins
+  create_bd_pin -dir O -type clk ad9226_clk
+  create_bd_pin -dir I -from 11 -to 0 ad9226_data
+  create_bd_pin -dir I ad9226_otr
+  create_bd_pin -dir O -type clk cjmcu1401_clk
+  create_bd_pin -dir O cjmcu1401_si
+  create_bd_pin -dir I -type clk master_clock
+
+  # Create instance: sensor_data_acquisit_0, and set properties
+  set block_name sensor_data_acquisition
+  set block_cell_name sensor_data_acquisit_0
+  if { [catch {set sensor_data_acquisit_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $sensor_data_acquisit_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: sensor_system_ila, and set properties
+  set sensor_system_ila [ create_bd_cell -type ip -vlnv xilinx.com:ip:system_ila:1.1 sensor_system_ila ]
+  set_property -dict [ list \
+   CONFIG.C_BRAM_CNT {0.5} \
+   CONFIG.C_INPUT_PIPE_STAGES {4} \
+   CONFIG.C_MON_TYPE {NATIVE} \
+   CONFIG.C_NUM_OF_PROBES {2} \
+ ] $sensor_system_ila
+
+  # Create instance: zero, and set properties
+  set zero [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 zero ]
+  set_property -dict [ list \
+   CONFIG.CONST_VAL {0} \
+ ] $zero
+
+  # Create port connections
+  connect_bd_net -net ad9226_data_1 [get_bd_pins ad9226_data] [get_bd_pins sensor_data_acquisit_0/ad9226_data]
+  connect_bd_net -net ad9226_otr_1 [get_bd_pins ad9226_otr] [get_bd_pins sensor_data_acquisit_0/ad9226_otr]
+  connect_bd_net -net master_clock_1 [get_bd_pins master_clock] [get_bd_pins sensor_data_acquisit_0/master_clock] [get_bd_pins sensor_system_ila/clk]
+  connect_bd_net -net sensor_data_acquisit_0_ad9226_clk [get_bd_pins ad9226_clk] [get_bd_pins sensor_data_acquisit_0/ad9226_clk]
+  connect_bd_net -net sensor_data_acquisit_0_adc_data [get_bd_pins sensor_data_acquisit_0/adc_data] [get_bd_pins sensor_system_ila/probe0]
+  connect_bd_net -net sensor_data_acquisit_0_adc_data_valid [get_bd_pins sensor_data_acquisit_0/adc_data_valid] [get_bd_pins sensor_system_ila/probe1]
+  connect_bd_net -net sensor_data_acquisit_0_cjmcu1401_clk [get_bd_pins cjmcu1401_clk] [get_bd_pins sensor_data_acquisit_0/cjmcu1401_clk]
+  connect_bd_net -net sensor_data_acquisit_0_cjmcu1401_si [get_bd_pins cjmcu1401_si] [get_bd_pins sensor_data_acquisit_0/cjmcu1401_si]
+  connect_bd_net -net zero_dout [get_bd_pins sensor_data_acquisit_0/reset] [get_bd_pins zero/dout]
+
+  # Perform GUI Layout
+  regenerate_bd_layout -hierarchy [get_bd_cells /sensor_ss] -layout_string {
+   "ActiveEmotionalView":"Default View",
+   "Default View_ScaleFactor":"1.0",
+   "Default View_TopLeft":"-191,-54",
+   "ExpandedHierarchyInLayout":"",
+   "guistr":"# # String gsaved with Nlview 7.0r4  2019-12-20 bk=1.5203 VDI=41 GEI=36 GUI=JA:10.0 TLS
+#  -string -flagsOSRD
+preplace port ad9226_clk -pg 1 -lvl 4 -x 770 -y 20 -defaultsOSRD
+preplace port ad9226_otr -pg 1 -lvl 0 -x 0 -y 190 -defaultsOSRD
+preplace port cjmcu1401_clk -pg 1 -lvl 4 -x 770 -y 200 -defaultsOSRD
+preplace port cjmcu1401_si -pg 1 -lvl 4 -x 770 -y 220 -defaultsOSRD
+preplace port master_clock -pg 1 -lvl 0 -x 0 -y 70 -defaultsOSRD
+preplace portBus ad9226_data -pg 1 -lvl 0 -x 0 -y 210 -defaultsOSRD
+preplace inst zero -pg 1 -lvl 1 -x 100 -y 130 -defaultsOSRD
+preplace inst sensor_data_acquisit_0 -pg 1 -lvl 2 -x 360 -y 180 -defaultsOSRD
+preplace inst sensor_system_ila -pg 1 -lvl 3 -x 650 -y 100 -defaultsOSRD
+preplace netloc ad9226_data_1 1 0 2 NJ 210 NJ
+preplace netloc ad9226_otr_1 1 0 2 NJ 190 NJ
+preplace netloc master_clock_1 1 0 3 NJ 70 190 80 N
+preplace netloc sensor_data_acquisit_0_ad9226_clk 1 2 2 530J 20 NJ
+preplace netloc sensor_data_acquisit_0_cjmcu1401_clk 1 2 2 NJ 200 NJ
+preplace netloc sensor_data_acquisit_0_cjmcu1401_si 1 2 2 NJ 220 NJ
+preplace netloc zero_dout 1 1 1 180J 130n
+preplace netloc sensor_data_acquisit_0_adc_data 1 2 1 540 100n
+preplace netloc sensor_data_acquisit_0_adc_data_valid 1 2 1 550 120n
+levelinfo -pg 1 0 100 360 650 770
+pagesize -pg 1 -db -bbox -sgen -190 0 930 280
+"
+}
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
   
 # Hierarchical cell: mpsoc_ss
 proc create_hier_cell_mpsoc_ss { parentCell nameHier } {
@@ -293,6 +482,7 @@ proc create_hier_cell_mpsoc_ss { parentCell nameHier } {
   create_bd_pin -dir O -from 0 -to 0 -type rst peripheral_aresetn_pl_clk0
   create_bd_pin -dir O -from 0 -to 0 -type rst peripheral_aresetn_pl_clk3
   create_bd_pin -dir O -type clk pl_clk0
+  create_bd_pin -dir O -type clk pl_clk1
   create_bd_pin -dir O -type clk pl_clk3
 
   # Create instance: axi_uartlite_0, and set properties
@@ -1913,52 +2103,9 @@ proc create_hier_cell_mpsoc_ss { parentCell nameHier } {
   connect_bd_net -net rst_ps8_1_49M_peripheral_aresetn [get_bd_pins peripheral_aresetn_pl_clk0] [get_bd_pins axi_uartlite_0/s_axi_aresetn] [get_bd_pins ps8_1_axi_periph/ARESETN] [get_bd_pins ps8_1_axi_periph/M00_ARESETN] [get_bd_pins ps8_1_axi_periph/M01_ARESETN] [get_bd_pins ps8_1_axi_periph/S00_ARESETN] [get_bd_pins rst_ps8_1_49M/peripheral_aresetn]
   connect_bd_net -net xlconcat_0_dout [get_bd_pins irq_concat/dout] [get_bd_pins zynq_ultra_ps_e_1/pl_ps_irq0]
   connect_bd_net -net xlconstant_0_dout [get_bd_pins rst_ps8_1_299M/dcm_locked] [get_bd_pins rst_ps8_1_49M/dcm_locked] [get_bd_pins xlconstant_0/dout]
+  connect_bd_net -net zynq_ultra_ps_e_1_pl_clk1 [get_bd_pins pl_clk1] [get_bd_pins zynq_ultra_ps_e_1/pl_clk1]
   connect_bd_net -net zynq_ultra_ps_e_1_pl_clk3 [get_bd_pins pl_clk3] [get_bd_pins rst_ps8_1_299M/slowest_sync_clk] [get_bd_pins zynq_ultra_ps_e_1/pl_clk3] [get_bd_pins zynq_ultra_ps_e_1/saxihpc0_fpd_aclk]
   connect_bd_net -net zynq_ultra_ps_e_1_pl_resetn0 [get_bd_pins rst_ps8_1_299M/ext_reset_in] [get_bd_pins rst_ps8_1_49M/ext_reset_in] [get_bd_pins zynq_ultra_ps_e_1/pl_resetn0]
-
-  # Perform GUI Layout
-  regenerate_bd_layout -hierarchy [get_bd_cells /mpsoc_ss] -layout_string {
-   "ActiveEmotionalView":"Default View",
-   "Default View_ScaleFactor":"0.47619",
-   "Default View_TopLeft":"-506,0",
-   "ExpandedHierarchyInLayout":"",
-   "guistr":"# # String gsaved with Nlview 7.0r4  2019-12-20 bk=1.5203 VDI=41 GEI=36 GUI=JA:10.0 TLS
-#  -string -flagsOSRD
-preplace port uart_rtl -pg 1 -lvl 4 -x 1280 -y 230 -defaultsOSRD
-preplace port M01_AXI -pg 1 -lvl 4 -x 1280 -y 160 -defaultsOSRD
-preplace port S_AXI_HPC0_FPD -pg 1 -lvl 0 -x 0 -y 410 -defaultsOSRD
-preplace port pl_clk3 -pg 1 -lvl 4 -x 1280 -y 500 -defaultsOSRD
-preplace port pl_clk0 -pg 1 -lvl 4 -x 1280 -y 330 -defaultsOSRD
-preplace portBus peripheral_aresetn_pl_clk3 -pg 1 -lvl 4 -x 1280 -y 780 -defaultsOSRD
-preplace portBus peripheral_aresetn_pl_clk0 -pg 1 -lvl 4 -x 1280 -y 350 -defaultsOSRD
-preplace portBus dma_mm2s_intrin -pg 1 -lvl 0 -x 0 -y 240 -defaultsOSRD
-preplace portBus dma_s2mm_intrin -pg 1 -lvl 0 -x 0 -y 260 -defaultsOSRD
-preplace inst zynq_ultra_ps_e_1 -pg 1 -lvl 2 -x 550 -y 440 -defaultsOSRD
-preplace inst rst_ps8_1_49M -pg 1 -lvl 2 -x 550 -y 680 -defaultsOSRD
-preplace inst axi_uartlite_0 -pg 1 -lvl 3 -x 1080 -y 240 -defaultsOSRD
-preplace inst xlconstant_0 -pg 1 -lvl 1 -x 120 -y 720 -defaultsOSRD
-preplace inst ps8_1_axi_periph -pg 1 -lvl 2 -x 550 -y 150 -defaultsOSRD
-preplace inst rst_ps8_1_299M -pg 1 -lvl 3 -x 1080 -y 740 -defaultsOSRD
-preplace inst irq_concat -pg 1 -lvl 1 -x 120 -y 240 -defaultsOSRD
-preplace netloc clk_wiz_0_clk_300 1 1 3 230 300 880 330 NJ
-preplace netloc zynq_ultra_ps_e_1_pl_resetn0 1 1 2 240 790 870
-preplace netloc xlconstant_0_dout 1 1 2 230 780 NJ
-preplace netloc rst_ps8_1_49M_peripheral_aresetn 1 1 3 240 290 860 350 NJ
-preplace netloc zynq_ultra_ps_e_1_pl_clk3 1 1 3 240 560 880 500 NJ
-preplace netloc rst_ps8_1_299M_peripheral_aresetn 1 3 1 NJ 780
-preplace netloc axi_uartlite_0_interrupt 1 0 4 20 320 NJ 320 NJ 320 1260
-preplace netloc xlconcat_0_dout 1 1 1 220 240n
-preplace netloc In1_1 1 0 1 NJ 240
-preplace netloc In2_1 1 0 1 NJ 260
-preplace netloc zynq_ultra_ps_e_1_M_AXI_HPM0_FPD 1 1 2 240 10 870
-preplace netloc ps8_1_axi_periph_M00_AXI 1 2 1 880 140n
-preplace netloc axi_uartlite_0_UART 1 3 1 NJ 230
-preplace netloc Conn1 1 2 2 NJ 160 NJ
-preplace netloc Conn2 1 0 2 NJ 410 NJ
-levelinfo -pg 1 0 120 550 1080 1280
-pagesize -pg 1 -db -bbox -sgen -220 0 1560 840
-"
-}
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -2038,7 +2185,7 @@ proc create_hier_cell_dma_ss { parentCell nameHier } {
   # Create instance: dma_system_ila, and set properties
   set dma_system_ila [ create_bd_cell -type ip -vlnv xilinx.com:ip:system_ila:1.1 dma_system_ila ]
   set_property -dict [ list \
-   CONFIG.C_BRAM_CNT {0} \
+   CONFIG.C_BRAM_CNT {6} \
    CONFIG.C_SLOT_0_INTF_TYPE {xilinx.com:interface:axis_rtl:1.0} \
  ] $dma_system_ila
 
@@ -2059,44 +2206,6 @@ proc create_hier_cell_dma_ss { parentCell nameHier } {
   connect_bd_net -net clk_300m_resetn_1 [get_bd_pins pl_clk0_aresetn] [get_bd_pins axi_dma_0/axi_resetn]
   connect_bd_net -net mpsoc_ss_pl_clk0 [get_bd_pins pl_clk0] [get_bd_pins axi_dma_0/s_axi_lite_aclk]
   connect_bd_net -net sysclk_clk_wiz_clk_300mhz [get_bd_pins pl_clk3] [get_bd_pins axi_dma_0/m_axi_mm2s_aclk] [get_bd_pins axi_dma_0/m_axi_s2mm_aclk] [get_bd_pins axi_dma_0/m_axi_sg_aclk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M00_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_interconnect_0/S01_ACLK] [get_bd_pins axi_interconnect_0/S02_ACLK] [get_bd_pins axis_data_fifo_0/s_axis_aclk] [get_bd_pins dma_system_ila/clk]
-
-  # Perform GUI Layout
-  regenerate_bd_layout -hierarchy [get_bd_cells /dma_ss] -layout_string {
-   "ActiveEmotionalView":"Default View",
-   "Default View_ScaleFactor":"1.0",
-   "Default View_TopLeft":"-243,-111",
-   "ExpandedHierarchyInLayout":"",
-   "guistr":"# # String gsaved with Nlview 7.0r4  2019-12-20 bk=1.5203 VDI=41 GEI=36 GUI=JA:10.0 TLS
-#  -string -flagsOSRD
-preplace port M00_AXI -pg 1 -lvl 4 -x 1010 -y 220 -defaultsOSRD
-preplace port S_AXI_LITE -pg 1 -lvl 0 -x 0 -y 110 -defaultsOSRD
-preplace port pl_clk3_aresetn -pg 1 -lvl 0 -x 0 -y 380 -defaultsOSRD
-preplace port pl_clk0_aresetn -pg 1 -lvl 0 -x 0 -y 230 -defaultsOSRD
-preplace port dma_mm2s_introut -pg 1 -lvl 4 -x 1010 -y 20 -defaultsOSRD
-preplace port dma_s2mm_introut -pg 1 -lvl 4 -x 1010 -y 40 -defaultsOSRD
-preplace port pl_clk3 -pg 1 -lvl 0 -x 0 -y 400 -defaultsOSRD
-preplace port pl_clk0 -pg 1 -lvl 0 -x 0 -y 150 -defaultsOSRD
-preplace inst axi_dma_0 -pg 1 -lvl 2 -x 470 -y 170 -defaultsOSRD
-preplace inst axi_interconnect_0 -pg 1 -lvl 3 -x 840 -y 220 -defaultsOSRD
-preplace inst axis_data_fifo_0 -pg 1 -lvl 1 -x 150 -y 380 -defaultsOSRD
-preplace inst dma_system_ila -pg 1 -lvl 2 -x 470 -y 390 -defaultsOSRD
-preplace netloc axi_dma_0_mm2s_introut 1 2 2 660J 20 NJ
-preplace netloc axi_dma_0_s2mm_introut 1 2 2 680J 40 NJ
-preplace netloc mpsoc_ss_pl_clk0 1 0 2 NJ 150 NJ
-preplace netloc sysclk_clk_wiz_clk_300mhz 1 0 3 20 470 280 40 670
-preplace netloc clk_300m_resetn_1 1 0 2 NJ 230 NJ
-preplace netloc S00_ARESETN_1 1 0 3 30 460 290 310 690
-preplace netloc axi_interconnect_0_M00_AXI 1 3 1 NJ 220
-preplace netloc axi_dma_0_M_AXI_S2MM 1 2 1 N 140
-preplace netloc axi_dma_0_M_AXI_SG 1 2 1 N 100
-preplace netloc mpsoc_ss_M00_AXI 1 0 2 NJ 110 NJ
-preplace netloc axi_dma_0_M_AXI_MM2S 1 2 1 N 120
-preplace netloc axis_data_fifo_0_M_AXIS 1 1 1 270 130n
-preplace netloc axi_dma_0_M_AXIS_MM2S 1 0 3 30 300 NJ 300 650
-levelinfo -pg 1 0 150 470 840 1010
-pagesize -pg 1 -db -bbox -sgen -160 0 1200 480
-"
-}
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -2133,6 +2242,11 @@ pagesize -pg 1 -db -bbox -sgen -160 0 1200 480
 
 
   # Create ports
+  set ad9226_clk [ create_bd_port -dir O -type clk ad9226_clk ]
+  set ad9226_data [ create_bd_port -dir I -from 11 -to 0 ad9226_data ]
+  set ad9226_otr [ create_bd_port -dir I ad9226_otr ]
+  set cjmcu1401_clk [ create_bd_port -dir O -type clk cjmcu1401_clk ]
+  set cjmcu1401_si [ create_bd_port -dir O cjmcu1401_si ]
   set fan_pwm [ create_bd_port -dir O fan_pwm ]
 
   # Create instance: dma_ss
@@ -2141,6 +2255,9 @@ pagesize -pg 1 -db -bbox -sgen -160 0 1200 480
   # Create instance: mpsoc_ss
   create_hier_cell_mpsoc_ss [current_bd_instance .] mpsoc_ss
 
+  # Create instance: sensor_ss
+  create_hier_cell_sensor_ss [current_bd_instance .] sensor_ss
+
   # Create interface connections
   connect_bd_intf_net -intf_net S_AXI_LITE_1 [get_bd_intf_pins dma_ss/S_AXI_LITE] [get_bd_intf_pins mpsoc_ss/M01_AXI]
   connect_bd_intf_net -intf_net axi_uartlite_0_UART [get_bd_intf_ports uart_rtl] [get_bd_intf_pins mpsoc_ss/uart_rtl]
@@ -2148,11 +2265,17 @@ pagesize -pg 1 -db -bbox -sgen -160 0 1200 480
 
   # Create port connections
   connect_bd_net -net S00_ARESETN_1 [get_bd_pins dma_ss/pl_clk3_aresetn] [get_bd_pins mpsoc_ss/peripheral_aresetn_pl_clk3]
+  connect_bd_net -net ad9226_data_0_1 [get_bd_ports ad9226_data] [get_bd_pins sensor_ss/ad9226_data]
+  connect_bd_net -net ad9226_otr_0_1 [get_bd_ports ad9226_otr] [get_bd_pins sensor_ss/ad9226_otr]
   connect_bd_net -net dma_ss_dma_mm2s_introut [get_bd_pins dma_ss/dma_mm2s_introut] [get_bd_pins mpsoc_ss/dma_mm2s_intrin]
   connect_bd_net -net dma_ss_dma_s2mm_introut [get_bd_pins dma_ss/dma_s2mm_introut] [get_bd_pins mpsoc_ss/dma_s2mm_intrin]
+  connect_bd_net -net master_clock_1 [get_bd_pins mpsoc_ss/pl_clk1] [get_bd_pins sensor_ss/master_clock]
   connect_bd_net -net mpsoc_ss_peripheral_aresetn_pl_clk0 [get_bd_pins dma_ss/pl_clk0_aresetn] [get_bd_pins mpsoc_ss/peripheral_aresetn_pl_clk0]
   connect_bd_net -net pl_clk0 [get_bd_pins dma_ss/pl_clk0] [get_bd_pins mpsoc_ss/pl_clk0]
   connect_bd_net -net pl_clk3 [get_bd_pins dma_ss/pl_clk3] [get_bd_pins mpsoc_ss/pl_clk3]
+  connect_bd_net -net sensor_ss_ad9226_clk_0 [get_bd_ports ad9226_clk] [get_bd_pins sensor_ss/ad9226_clk]
+  connect_bd_net -net sensor_ss_cjmcu1401_clk_0 [get_bd_ports cjmcu1401_clk] [get_bd_pins sensor_ss/cjmcu1401_clk]
+  connect_bd_net -net sensor_ss_cjmcu1401_si_0 [get_bd_ports cjmcu1401_si] [get_bd_pins sensor_ss/cjmcu1401_si]
 
   # Create address segments
   assign_bd_address -offset 0x000800000000 -range 0x000800000000 -target_address_space [get_bd_addr_spaces dma_ss/axi_dma_0/Data_SG] [get_bd_addr_segs mpsoc_ss/zynq_ultra_ps_e_1/SAXIGP0/HPC0_DDR_HIGH] -force
@@ -2178,26 +2301,38 @@ pagesize -pg 1 -db -bbox -sgen -160 0 1200 480
   # Perform GUI Layout
   regenerate_bd_layout -layout_string {
    "ActiveEmotionalView":"Default View",
-   "Default View_ScaleFactor":"1.0",
-   "Default View_TopLeft":"-78,-70",
+   "Default View_ScaleFactor":"0.930233",
+   "Default View_TopLeft":"-192,0",
    "ExpandedHierarchyInLayout":"",
    "guistr":"# # String gsaved with Nlview 7.0r4  2019-12-20 bk=1.5203 VDI=41 GEI=36 GUI=JA:10.0 TLS
 #  -string -flagsOSRD
-preplace port uart_rtl -pg 1 -lvl 3 -x 850 -y 70 -defaultsOSRD
+preplace port uart_rtl -pg 1 -lvl 3 -x 850 -y 90 -defaultsOSRD
+preplace port ad9226_clk -pg 1 -lvl 3 -x 850 -y 340 -defaultsOSRD
+preplace port ad9226_otr -pg 1 -lvl 0 -x 0 -y 360 -defaultsOSRD
+preplace port cjmcu1401_clk -pg 1 -lvl 3 -x 850 -y 360 -defaultsOSRD
+preplace port cjmcu1401_si -pg 1 -lvl 3 -x 850 -y 380 -defaultsOSRD
 preplace port fan_pwm -pg 1 -lvl 3 -x 850 -y 20 -defaultsOSRD
-preplace inst mpsoc_ss -pg 1 -lvl 2 -x 590 -y 120 -defaultsOSRD
-preplace inst dma_ss -pg 1 -lvl 1 -x 210 -y 120 -defaultsOSRD
-preplace netloc pl_clk3 1 0 3 20 250 NJ 250 830
-preplace netloc S00_ARESETN_1 1 0 3 30 220 NJ 220 810
-preplace netloc pl_clk0 1 0 3 50 240 NJ 240 820
-preplace netloc mpsoc_ss_peripheral_aresetn_pl_clk0 1 0 3 40 230 NJ 230 800
-preplace netloc dma_ss_dma_mm2s_introut 1 1 1 N 120
-preplace netloc dma_ss_dma_s2mm_introut 1 1 1 N 140
-preplace netloc axi_uartlite_0_UART 1 2 1 N 70
+preplace portBus ad9226_data -pg 1 -lvl 0 -x 0 -y 340 -defaultsOSRD
+preplace inst dma_ss -pg 1 -lvl 1 -x 210 -y 130 -defaultsOSRD
+preplace inst mpsoc_ss -pg 1 -lvl 2 -x 580 -y 130 -defaultsOSRD
+preplace inst sensor_ss -pg 1 -lvl 2 -x 580 -y 360 -defaultsOSRD
+preplace netloc S00_ARESETN_1 1 0 3 50 240 NJ 240 810
+preplace netloc ad9226_data_0_1 1 0 2 NJ 340 NJ
+preplace netloc ad9226_otr_0_1 1 0 2 NJ 360 NJ
+preplace netloc dma_ss_dma_mm2s_introut 1 1 1 N 130
+preplace netloc dma_ss_dma_s2mm_introut 1 1 1 N 150
+preplace netloc master_clock_1 1 1 2 370 280 820
+preplace netloc mpsoc_ss_peripheral_aresetn_pl_clk0 1 0 3 20 270 NJ 270 830
+preplace netloc pl_clk0 1 0 3 30 250 NJ 250 800
+preplace netloc pl_clk3 1 0 3 40 260 NJ 260 790
+preplace netloc sensor_ss_ad9226_clk_0 1 2 1 NJ 340
+preplace netloc sensor_ss_cjmcu1401_clk_0 1 2 1 NJ 360
+preplace netloc sensor_ss_cjmcu1401_si_0 1 2 1 NJ 380
 preplace netloc S_AXI_LITE_1 1 0 3 20 10 NJ 10 830
-preplace netloc dma_ss_M00_AXI 1 1 1 N 100
-levelinfo -pg 1 0 210 590 850
-pagesize -pg 1 -db -bbox -sgen 0 0 970 260
+preplace netloc axi_uartlite_0_UART 1 2 1 NJ 90
+preplace netloc dma_ss_M00_AXI 1 1 1 N 110
+levelinfo -pg 1 0 210 580 850
+pagesize -pg 1 -db -bbox -sgen -190 0 1010 430
 "
 }
 
@@ -2212,7 +2347,8 @@ pagesize -pg 1 -db -bbox -sgen 0 0 970 260
   add_files -norecurse [make_wrapper -files [get_files ${design_name}.bd] -top]
   close_bd_design $design_name 
 }
-
+# H128B717------------------------------------------------------------------------
+set_property top design_1_wrapper [current_fileset]
 # H128B717------------------------------------------------------------------------
 # Create IPs in HDL modules
 # H128B717------------------------------------------------------------------------
@@ -2253,6 +2389,7 @@ if { $obj != "" } {
 
 }
 set obj [get_runs synth_1]
+set_property -name "needs_refresh" -value "1" -objects $obj
 set_property -name "part" -value "xczu3eg-sfvc784-1-i" -objects $obj
 set_property -name "strategy" -value "Vivado Synthesis Defaults" -objects $obj
 
@@ -2467,6 +2604,7 @@ set_property -name "options.warn_on_violation" -value "1" -objects $obj
 
 }
 set obj [get_runs impl_1]
+set_property -name "needs_refresh" -value "1" -objects $obj
 set_property -name "part" -value "xczu3eg-sfvc784-1-i" -objects $obj
 set_property -name "strategy" -value "Vivado Implementation Defaults" -objects $obj
 set_property -name "steps.write_bitstream.args.readback_file" -value "0" -objects $obj
@@ -2481,30 +2619,35 @@ if {[string equal [get_dashboard_gadgets  [ list "drc_1" ] ] ""]} {
 create_dashboard_gadget -name {drc_1} -type drc
 }
 set obj [get_dashboard_gadgets [ list "drc_1" ] ]
+set_property -name "reports" -value "impl_1#impl_1_route_report_drc_0" -objects $obj
 
 # Create 'methodology_1' gadget (if not found)
 if {[string equal [get_dashboard_gadgets  [ list "methodology_1" ] ] ""]} {
 create_dashboard_gadget -name {methodology_1} -type methodology
 }
 set obj [get_dashboard_gadgets [ list "methodology_1" ] ]
+set_property -name "reports" -value "impl_1#impl_1_route_report_methodology_0" -objects $obj
 
 # Create 'power_1' gadget (if not found)
 if {[string equal [get_dashboard_gadgets  [ list "power_1" ] ] ""]} {
 create_dashboard_gadget -name {power_1} -type power
 }
 set obj [get_dashboard_gadgets [ list "power_1" ] ]
+set_property -name "reports" -value "impl_1#impl_1_route_report_power_0" -objects $obj
 
 # Create 'timing_1' gadget (if not found)
 if {[string equal [get_dashboard_gadgets  [ list "timing_1" ] ] ""]} {
 create_dashboard_gadget -name {timing_1} -type timing
 }
 set obj [get_dashboard_gadgets [ list "timing_1" ] ]
+set_property -name "reports" -value "impl_1#impl_1_route_report_timing_summary_0" -objects $obj
 
 # Create 'utilization_1' gadget (if not found)
 if {[string equal [get_dashboard_gadgets  [ list "utilization_1" ] ] ""]} {
 create_dashboard_gadget -name {utilization_1} -type utilization
 }
 set obj [get_dashboard_gadgets [ list "utilization_1" ] ]
+set_property -name "reports" -value "synth_1#synth_1_synth_report_utilization_0" -objects $obj
 set_property -name "run.step" -value "synth_design" -objects $obj
 set_property -name "run.type" -value "synthesis" -objects $obj
 
@@ -2513,6 +2656,7 @@ if {[string equal [get_dashboard_gadgets  [ list "utilization_2" ] ] ""]} {
 create_dashboard_gadget -name {utilization_2} -type utilization
 }
 set obj [get_dashboard_gadgets [ list "utilization_2" ] ]
+set_property -name "reports" -value "impl_1#impl_1_place_report_utilization_0" -objects $obj
 
 move_dashboard_gadget -name {utilization_1} -row 0 -col 0
 move_dashboard_gadget -name {power_1} -row 1 -col 0
@@ -2520,7 +2664,3 @@ move_dashboard_gadget -name {drc_1} -row 2 -col 0
 move_dashboard_gadget -name {timing_1} -row 0 -col 1
 move_dashboard_gadget -name {utilization_2} -row 1 -col 1
 move_dashboard_gadget -name {methodology_1} -row 2 -col 1
-
-# H128B717------------------------------------------------------------------------
-exit
-# H128B717------------------------------------------------------------------------
