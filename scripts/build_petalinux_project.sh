@@ -16,11 +16,11 @@ cp $ORG_DIR/petalinux/system-user.dtsi $PROJ_DIR/project-spec/meta-user/recipes-
 # Add aarch64 sstate-cache and Setting download mirror
 # 1) run petalinux-config -> Yocto Settings -> Local sstate feeds settings -> local sstate feeds url
 #           Ex: /<path>/aarch64  for ZynqMP projects
-#           (Ex: /tools/Xilinx/petalinux/sstate_aarch64_2020.1/aarch64)
+#           (Ex: /tools/Xilinx/PetaLinux/sstate_aarch64_2021.1/aarch64)
 # 
 # 2) run petalinux-config -> Yocto Settings -> Add pre-mirror url
 #       file://<path>/downloads for all projects
-#       (Ex: file:///tools/Xilinx/petalinux/downloads)
+#       (Ex: file:///tools/Xilinx/PetaLinux/downloads)
 # 
 # 3) run petalinux-config -> Yocto Settings -> Enable Network sstate feeds -> [ ] excludes
 # 
@@ -127,7 +127,7 @@ echo "Finished at" >> $ORG_DIR/build_petalinux_project_runtime.txt
 date >> $ORG_DIR/build_petalinux_project_runtime.txt
 
 # Configuring SD boot 
-# Ref: UG1144 (v2020.1) PetaLinux Tools Documentation Reference Guide page: 76
+# Ref: UG1144 (v2021.1) PetaLinux Tools Documentation Reference Guide page: 76
 # $ cp images/linux/BOOT.BIN /media/<user>/BOOT/ 
 # $ cp images/linux/image.ub /media/<user>/BOOT/ 
 # $ cp images/linux/boot.scr /media/<user>/BOOT/ 
