@@ -270,12 +270,12 @@ CONFIG_YOCTO_PARALLEL_MAKE="8"
 #
 # Add pre-mirror url 
 #
-CONFIG_PRE_MIRROR_URL="file:///tools/Xilinx/Petalinux/downloads "
+CONFIG_PRE_MIRROR_URL="file:///tools/Xilinx/PetaLinux/downloads "
 
 #
 # Local sstate feeds settings
 #
-CONFIG_YOCTO_LOCAL_SSTATE_FEEDS_URL="/tools/Xilinx/Petalinux/sstate_aarch64_2020.2/aarch64/"
+CONFIG_YOCTO_LOCAL_SSTATE_FEEDS_URL="/tools/Xilinx/PetaLinux/sstate_aarch64_2021.1/aarch64/"
 # CONFIG_YOCTO_NETWORK_SSTATE_FEEDS is not set
 # CONFIG_YOCTO_BB_NO_NETWORK is not set
 

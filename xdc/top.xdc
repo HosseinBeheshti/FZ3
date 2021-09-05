@@ -40,7 +40,7 @@ set_property IOSTANDARD LVCMOS33 [get_ports {ad9226_data[10]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {ad9226_data[11]}]
 
 # CJMCU 1401 connect to j16
-set_property PACKAGE_PIN G11 [get_ports cjmcu_1401_clk]
-#set_property IOSTANDARD LVCMOS33 [get_ports cjmcu_1401_clk]
-set_property PACKAGE_PIN E10 [get_ports cjmcu_1401_si]
-#set_property IOSTANDARD LVCMOS33 [get_ports cjmcu_1401_si]
+set_property PACKAGE_PIN G11 [get_ports cjmcu1401_clk]
+set_property IOSTANDARD LVCMOS33 [get_ports cjmcu1401_clk]
+set_property PACKAGE_PIN E10 [get_ports cjmcu1401_si]
+set_property IOSTANDARD LVCMOS33 [get_ports cjmcu1401_si]
