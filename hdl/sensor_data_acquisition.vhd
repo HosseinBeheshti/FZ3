@@ -39,9 +39,12 @@ entity sensor_data_acquisition is
     ad9226_data    : in std_logic_vector(11 downto 0);
     adc_data       : out std_logic_vector(11 downto 0);
     adc_data_valid : out std_logic;
+    adc_data_otr   : out std_logic;
     -- cjmcu1401 interface
     cjmcu1401_clk : out std_logic;
-    cjmcu1401_si  : out std_logic
+    cjmcu1401_si  : out std_logic;
+    -- debug probe
+    dbg_probe : out std_logic_vector(15 downto 0)
   );
 end sensor_data_acquisition;
 
@@ -59,9 +62,10 @@ architecture Behavioral of sensor_data_acquisition is
 
   component cjmcu1401_driver is
     port (
-      master_clock  : in std_logic;
-      cjmcu1401_si  : out std_logic;
-      cjmcu1401_clk : out std_logic
+      master_clock           : in std_logic;
+      sample_capture_trigger : out std_logic;
+      cjmcu1401_si           : out std_logic;
+      cjmcu1401_clk          : out std_logic
     );
   end component;
 
@@ -73,17 +77,21 @@ architecture Behavioral of sensor_data_acquisition is
       ad9226_data    : in std_logic_vector(11 downto 0);
       adc_data       : out std_logic_vector(11 downto 0);
       adc_data_valid : out std_logic;
+      adc_data_otr   : out std_logic;
       ad9226_clk     : out std_logic
     );
   end component;
+
+  signal sample_capture_trigger : std_logic;
 
 begin
 
   cjmcu1401_driver_inst : cjmcu1401_driver
   port map(
-    master_clock  => master_clock,
-    cjmcu1401_si  => cjmcu1401_si,
-    cjmcu1401_clk => cjmcu1401_clk
+    master_clock           => master_clock,
+    sample_capture_trigger => sample_capture_trigger,
+    cjmcu1401_si           => cjmcu1401_si,
+    cjmcu1401_clk          => cjmcu1401_clk
   );
 
   ad9226_driver_ins : ad9226_driver
@@ -94,7 +102,10 @@ begin
     ad9226_data    => ad9226_data,
     adc_data       => adc_data,
     adc_data_valid => adc_data_valid,
+    adc_data_otr   => adc_data_otr,
     ad9226_clk     => ad9226_clk
   );
+
+  dbg_probe(0) <= sample_capture_trigger;
 
 end Behavioral;

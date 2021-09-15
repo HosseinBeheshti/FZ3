@@ -8,71 +8,19 @@ echo "Started at" >> $ORG_DIR/build_petalinux_project_runtime.txt
 date >> $ORG_DIR/build_petalinux_project_runtime.txt
 cd $PROJ_DIR
 
-# device tree : $ORG_DIR/petalinux/system-user.dtsi
-cp $ORG_DIR/petalinux/system-user.dtsi $PROJ_DIR/project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi
-
-# project configuration: $ORG_DIR/petalinux/config
-#
-# Add aarch64 sstate-cache and Setting download mirror
-# 1) run petalinux-config -> Yocto Settings -> Local sstate feeds settings -> local sstate feeds url
-#           Ex: /<path>/aarch64  for ZynqMP projects
-#           (Ex: /tools/Xilinx/PetaLinux/sstate_aarch64_2021.1/aarch64)
-# 
-# 2) run petalinux-config -> Yocto Settings -> Add pre-mirror url
-#       file://<path>/downloads for all projects
-#       (Ex: file:///tools/Xilinx/PetaLinux/downloads)
-# 
-# 3) run petalinux-config -> Yocto Settings -> Enable Network sstate feeds -> [ ] excludes
-# 
-# 4) run petalinux-config -> Yocto Settings -> Enable BB NO NETWORK -> [ ] excludes
-# 
-# 5) run petalinux-config -> Image Packaging Configuration -> Root filesystem type -> (EXT4 (SD/eMMC/SATA/USB))
-# 
-# 6) run petalinux-config -> Image Packaging Configuration ->  (/dev/mmcblk1p2) Device node of SD device
-# 
-# 7) Subsystem AUTO Hardware Settings -> Advanced bootable images storage Settings -> u-boot env partition settings -> image storage media (primary sd)    
-# 
-# 8) Subsystem AUTO Hardware Settings -> SD/SDIO Settings -> Primary SD/SDIO (psu_sd_1) 
-# 
-# 9) Subsystem AUTO Hardware Settings -> Ethernet Settings -> Randomise MAC Address[*] include
-# 
-# 10) Subsystem AUTO Hardware Settings -> Ethernet Settings -> Obtain IP Automatically[*] include
-cp $ORG_DIR/petalinux/config $PROJ_DIR/project-spec/configs/config
-
-# rootfs configuration: $ORG_DIR/petalinux/rootfs_config 
-#
-# 1) apps -> [*] gpio-demo
-#
-# 2) Image Features -> [*] auto-login
-#
-# 3) Petalinux Package Groups -> packagegroup-petalinux -> [*] packagegroup-petalinux
-#
-# 4) Petalinux Package Groups -> packagegroup-petalinux-multimedia -> [*] packagegroup-petalinux-multimedia  
-#
-# 5) Petalinux Package Groups -> packagegroup-petalinux-openamp -> [*] packagegroup-petalinux-openamp
-#
-# 6) Petalinux Package Groups -> packagegroup-petalinux-v4lutils -> [*] packagegroup-petalinux-v4lutils
-#
-# 7) Petalinux Package Groups -> packagegroup-petalinux-qt -> [*] packagegroup-petalinux-qt
-#
-# 8) Petalinux Package Groups -> packagegroup-petalinux-qt -> [*] populate_sdk_qt5
-#
-cp $ORG_DIR/petalinux/rootfs_config $PROJ_DIR/project-spec/configs/rootfs_config
-petalinux-config -c rootfs --silentconfig 
-
-# kernel configuration: $ORG_DIR/petalinux/config
-#
-# 1)
-
 # Execute the Petalinux Build
+echo "H128B717: run petalinux-build"
 petalinux-build
 # Package the build into Boot Images
+echo "H128B717: run petalinux-package"
 petalinux-package --boot --format BIN --fsbl images/linux/zynqmp_fsbl.elf --u-boot images/linux/u-boot.elf --pmufw images/linux/pmufw.elf --fpga images/linux/system.bit --force
 
 # Create qt sdk 
 # ref:(https://www.hackster.io/mindaugas2/creating-gui-app-for-the-ultra96-with-qt-28d308)
+echo "H128B717: run petalinux-build --sdk"
 petalinux-build --sdk
 
+echo "H128B717: run petalinux--package --sysroot"
 petalinux-package --sysroot
 # prepare Qt 
 # warning: this steps need to run manually
@@ -127,7 +75,7 @@ echo "Finished at" >> $ORG_DIR/build_petalinux_project_runtime.txt
 date >> $ORG_DIR/build_petalinux_project_runtime.txt
 
 # Configuring SD boot 
-# Ref: UG1144 (v2021.1) PetaLinux Tools Documentation Reference Guide page: 76
+# Ref: UG1144 (v2020.2) PetaLinux Tools Documentation Reference Guide page: 76
 # $ cp images/linux/BOOT.BIN /media/<user>/BOOT/ 
 # $ cp images/linux/image.ub /media/<user>/BOOT/ 
 # $ cp images/linux/boot.scr /media/<user>/BOOT/ 

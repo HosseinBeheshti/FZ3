@@ -7,6 +7,10 @@ qt/build*
 vivado*.jou
 vivado*.log
 vivado*.str
+webtalk*.jou
+webtalk*.log
+webtalk*.str
 *runtime.txt
 *.slxc
 *.asv
+*.m~
