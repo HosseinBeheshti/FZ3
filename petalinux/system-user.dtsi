@@ -5,15 +5,23 @@
 	    dmas = <&dma_ss_axi_dma_0 0 &dma_ss_axi_dma_0 1>;
 	    dma-names = "tx_channel", "rx_channel";
 	};
+	chosen {
+		bootargs = " earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk1p2 rw rootwait uio_pdrv_genirq.of_id=generic-uio";
+		stdout-path = "serial0:115200n8";
+	};
 };
 
 &dma_ss_axi_dma_0 {
-	dma-channel@b0000000 {
+	dma-channel@a0010000 { //check address from pl.dtsi
 		xlnx,device-id = <0x0>;
 	};
-	dma-channel@b0000030 {
+	dma-channel@a0010030 {//check address from pl.dtsi
 		xlnx,device-id = <0x1>;
 	};
+};
+
+&dma_ss_dma_lb_axis_switch_0 {
+	compatible = "generic-uio";
 };
 
 &sdhci1 {

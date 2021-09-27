@@ -1,5 +1,6 @@
 build/*
 artifacts/*
+hls/dma_lb_axis_switch/dma_lb_axis_switch/*
 log_data/*
 qt/sdk/*
 qt/build*
@@ -9,6 +10,7 @@ vivado*.log
 vivado*.str
 webtalk*.jou
 webtalk*.log
+vitis_hls*.log
 webtalk*.str
 *runtime.txt
 *.slxc

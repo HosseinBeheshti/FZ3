@@ -98,3 +98,10 @@ date >> $ORG_DIR/build_petalinux_project_runtime.txt
 # $ petalinux-create -t apps --name myapp --enable 
 # Removes the shared state cache of the corresponding component:
 # $ petalinux-build -x distclean
+
+# decompile device tree
+# Now, if you have already generated the binary files to be loaded onto 
+# the hardware, the compiled device tree blob (i.e. .dtb) will 
+# be under <project>/images/linux/system.dtb.
+# $ sudo apt install device-tree-compiler
+# $ dtc -I dtb -O dts -o system.dts system.dtb

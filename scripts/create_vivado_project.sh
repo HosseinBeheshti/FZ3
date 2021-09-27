@@ -11,8 +11,22 @@ if [ -d "$PROJ_DIR" ]; then
      printf "Removing previous files ...\n"
      rm -rf $PROJ_DIR;
 fi
-# prepare HLS IPs
 # 
+# prepare HLS IPs
+echo "BUILDING HLS IPCORES"
+cwd=$(pwd)
+for file in ./hls/*/script.tcl; do
+	cd $(dirname "$file")
+	echo "++++++++++++++++++++++++++++++++++++++"
+	pwd
+	echo "++++++++++++++++++++++++++++++++++++++"
+	# ---------------- CODE HERE ----------------
+	vitis_hls -f script.tcl
+	# -------------------------------------------
+	echo "**************************************"
+	cd $cwd	
+	echo
+done
 # prepare SysGen IPs
 # 
 # build vivado project

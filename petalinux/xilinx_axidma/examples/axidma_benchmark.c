@@ -44,6 +44,9 @@
 #include "util.h"               // Miscellaneous utilities
 #include "conversion.h"         // Miscellaneous conversion utilities
 
+// H128B717: add dma_lp_sw contorller
+#include "xdma_lb_axis_switch.h"
+
 /*----------------------------------------------------------------------------
  * Internal Definitons
  *----------------------------------------------------------------------------*/
@@ -465,6 +468,21 @@ int main(int argc, char **argv)
     axidma_dev_t axidma_dev;
     const array_t *tx_chans, *rx_chans;
     struct axidma_video_frame transmit_frame, *tx_frame, receive_frame, *rx_frame;
+    // H128B717: setup axis switch
+    XDma_lb_axis_switch loop_back_sw;
+    const char *loop_back_sw_name = "dma_lb_axis_switch";
+    int sw_init_status = 0;
+    sw_init_status = XDma_lb_axis_switch_Initialize(&loop_back_sw, loop_back_sw_name);
+    if (sw_init_status != 0)
+    {
+        printf("AXI DMA sw initialize failed with code: %d\n",sw_init_status);
+    }
+    else
+    {
+        printf("AXI DMA sw initialized \n");
+    }
+    XDma_lb_axis_switch_Set_dma_loopback_en(&loop_back_sw, 1);
+    printf("AXI DMA sw loopback enabled \n");
 
     // Check if the user overrided the default transfer size and number
     if (parse_args(argc, argv, &tx_channel, &rx_channel, &tx_size,
@@ -553,6 +571,10 @@ int main(int argc, char **argv)
     printf("Beginning performance analysis of the DMA engine.\n\n");
     rc = time_dma(axidma_dev, tx_channel, tx_buf, tx_size, tx_frame,
             rx_channel, rx_buf, rx_size, rx_frame, num_transfers);
+
+    XDma_lb_axis_switch_Set_dma_loopback_en(&loop_back_sw, 0);
+    printf("AXI DMA sw loopback disabled \n");
+    XDma_lb_axis_switch_Release(&loop_back_sw);
 
 free_rx_buf:
     axidma_free(axidma_dev, rx_buf, rx_size);

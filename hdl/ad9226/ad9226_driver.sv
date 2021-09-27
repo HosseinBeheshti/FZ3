@@ -30,13 +30,18 @@ module ad9226_driver(
     output reg ad9226_clk
   );
 
+  reg ad9226_clk_temp;
+  reg ad9226_otr_temp;
+
   always @(posedge master_clock)
   begin
     // create clock
-    ad9226_clk = ~ad9226_clk;
+    ad9226_clk_temp = ~ad9226_clk_temp;
+    ad9226_clk <= ad9226_clk_temp;
     adc_data = ad9226_data;
-    adc_data_valid = ~ad9226_otr;
-    adc_data_otr = ad9226_otr;
+    ad9226_otr_temp = ad9226_otr;
+    adc_data_valid = ~ad9226_otr_temp & ad9226_clk_temp;
+    adc_data_otr = ad9226_otr_temp;
   end
 
 endmodule
