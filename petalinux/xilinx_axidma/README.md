@@ -158,7 +158,7 @@ This will generate both HTML and Latex documentation for the AXI DMA library und
 
 Before you run an application that uses the AXI DMA software stack, you must make sure that the driver has been inserted into the kernel. This can be accomplished with:
 ```bash
-insmod axidma.ko
+insmod /lib/modules/*-xilinx-v*/extra/xilinx-axidma.ko
 ```
 
 This should create a character device for the driver at `/dev/axidma`. To verify that the insertion was successful, run `dmesg` to view the kernel log messages. You should see a message like the following:

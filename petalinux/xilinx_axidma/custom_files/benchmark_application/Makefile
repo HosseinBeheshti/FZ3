@@ -4,6 +4,9 @@ APP = axidma-benchmark
 APP_OBJS = axidma_benchmark.o
 APP_OBJS += libaxidma.o
 APP_OBJS += util.o
+APP_OBJS += xdma_lb_axis_switch.o
+APP_OBJS += xdma_lb_axis_switch_linux.o
+APP_OBJS += xdma_lb_axis_switch_sinit.o
 
 all: build
 

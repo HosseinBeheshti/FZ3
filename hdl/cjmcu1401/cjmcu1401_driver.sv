@@ -30,6 +30,7 @@ module cjmcu1401_driver #
     //! input 100MHz master clock
     input master_clock,
     output reg sample_capture_trigger,
+    output reg [15:0] pixel_counter_out,
     (* IOB="true" *)
     output reg cjmcu1401_si,
     (* IOB="true" *)
@@ -77,4 +78,5 @@ module cjmcu1401_driver #
     if(si_counter >= INITIAL_DELAY_NCLK )
       initial_interval = 1'b0;
   end
+  assign pixel_counter_out = pixel_counter;
 endmodule

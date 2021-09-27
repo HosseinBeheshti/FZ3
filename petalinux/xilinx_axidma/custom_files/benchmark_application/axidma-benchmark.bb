@@ -14,7 +14,12 @@ SRC_URI = "file://axidma_benchmark.c \
            file://libaxidma.c \
            file://util.c \
            file://util.h \
-	   file://Makefile \
+	       file://Makefile \
+	       file://xdma_lb_axis_switch.c \
+	       file://xdma_lb_axis_switch.h \
+	       file://xdma_lb_axis_switch_hw.h \
+	       file://xdma_lb_axis_switch_linux.c \
+	       file://xdma_lb_axis_switch_sinit.c \
 		  "
 
 S = "${WORKDIR}"
