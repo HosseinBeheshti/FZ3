@@ -15,7 +15,7 @@
 	dma-channel@a0010000 { //check address from pl.dtsi
 		xlnx,device-id = <0x0>;
 	};
-	dma-channel@a0010030 {//check address from pl.dtsi
+	dma-channel@a0010030 { //check address from pl.dtsi
 		xlnx,device-id = <0x1>;
 	};
 };
