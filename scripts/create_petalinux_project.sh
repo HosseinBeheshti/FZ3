@@ -66,17 +66,19 @@ petalinux-config --silentconfig
 #
 # 2) Image Features -> [*] auto-login
 #
-# 3) Petalinux Package Groups -> packagegroup-petalinux -> [*] packagegroup-petalinux
+# 3) Image Features -> [*] ssh-server-openssh
 #
-# 4) Petalinux Package Groups -> packagegroup-petalinux-multimedia -> [*] packagegroup-petalinux-multimedia  
+# 4) Petalinux Package Groups -> packagegroup-petalinux -> [*] packagegroup-petalinux
 #
-# 5) Petalinux Package Groups -> packagegroup-petalinux-openamp -> [*] packagegroup-petalinux-openamp
+# 5) Petalinux Package Groups -> packagegroup-petalinux-multimedia -> [*] packagegroup-petalinux-multimedia  
 #
-# 6) Petalinux Package Groups -> packagegroup-petalinux-v4lutils -> [*] packagegroup-petalinux-v4lutils
+# 6) Petalinux Package Groups -> packagegroup-petalinux-openamp -> [*] packagegroup-petalinux-openamp
 #
-# 7) Petalinux Package Groups -> packagegroup-petalinux-qt -> [*] packagegroup-petalinux-qt
+# 7) Petalinux Package Groups -> packagegroup-petalinux-v4lutils -> [*] packagegroup-petalinux-v4lutils
 #
-# 8) Petalinux Package Groups -> packagegroup-petalinux-qt -> [*] populate_sdk_qt5
+# 8) Petalinux Package Groups -> packagegroup-petalinux-qt -> [*] packagegroup-petalinux-qt
+#
+# 9) Petalinux Package Groups -> packagegroup-petalinux-qt -> [*] populate_sdk_qt5
 #
 cp $ORG_DIR/petalinux/rootfs_config $PROJ_DIR/project-spec/configs/rootfs_config
 echo "H128B717: rootfs_config file copied"

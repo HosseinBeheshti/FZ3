@@ -1,7 +1,7 @@
 ############################################################
 ## This file is generated automatically by Vitis HLS.
 ## Please DO NOT edit it.
-## Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+## Copyright 1986-2021 Xilinx, Inc. All Rights Reserved.
 ############################################################
 open_project dma_lb_axis_switch
 set_top dma_lb_axis_switch
