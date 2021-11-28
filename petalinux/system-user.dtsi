@@ -32,3 +32,10 @@
 &dwc3_0 {
     dr_mode = "host";
 };
+
+&psgtr {
+	status = "okay";
+	/* dp */
+	clocks = <&video_clk>;
+	clock-names = "video_clk";
+};
