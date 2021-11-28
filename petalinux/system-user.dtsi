@@ -33,9 +33,15 @@
     dr_mode = "host";
 };
 
+&si5332_1 { /* clk2_dp */
+	compatible = "fixed-clock";
+	#clock-cells = <0>;
+	clock-frequency = <27000000>;
+};
+
 &psgtr {
 	status = "okay";
 	/* dp */
-	clocks = <&video_clk>;
-	clock-names = "video_clk";
+	clocks = <&si5332_1>;
+	clock-names = "si5332_1";
 };
