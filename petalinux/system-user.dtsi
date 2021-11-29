@@ -9,6 +9,11 @@
 		bootargs = " earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk1p2 rw rootwait uio_pdrv_genirq.of_id=generic-uio";
 		stdout-path = "serial0:115200n8";
 	};
+	si5332_0: si5332_0{ /* clk2_dp */
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <27000000>;
+	};
 };
 
 &dma_ss_axi_dma_0 {
@@ -31,4 +36,11 @@
 
 &dwc3_0 {
     dr_mode = "host";
+};
+
+&psgtr {
+	status = "okay";
+	/* dp */
+	clocks = <&si5332_0>;
+	clock-names = "ref2";
 };
