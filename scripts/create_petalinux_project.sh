@@ -32,7 +32,7 @@ echo "H128B717: device tree copied"
 # Add aarch64 sstate-cache and Setting download mirror
 # 1) run petalinux-config -> Yocto Settings -> Local sstate feeds settings -> local sstate feeds url
 #           Ex: /<path>/aarch64  for ZynqMP projects
-#           (Ex: /tools/Xilinx/PetaLinux/sstate_aarch64_2020.2/aarch64)
+#           (Ex: /tools/Xilinx/PetaLinux/sstate_aarch64_2021.2/aarch64)
 # 
 # 2) run petalinux-config -> Yocto Settings -> Add pre-mirror url
 #       file://<path>/downloads for all projects

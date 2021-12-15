@@ -146,7 +146,7 @@ CONFIG_SUBSYSTEM_EXTRA_DT_FILES=""
 #
 CONFIG_SUBSYSTEM_BOOTARGS_AUTO=y
 CONFIG_SUBSYSTEM_BOOTARGS_EARLYPRINTK=y
-CONFIG_SUBSYSTEM_BOOTARGS_GENERATED=" earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/ram0 rw"
+CONFIG_SUBSYSTEM_BOOTARGS_GENERATED=" earlycon console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk1p2 rw rootwait"
 CONFIG_SUBSYSTEM_DEVICETREE_COMPILER_FLAGS="-@"
 # CONFIG_SUBSYSTEM_DTB_OVERLAY is not set
 # CONFIG_SUBSYSTEM_REMOVE_PL_DTB is not set
@@ -278,18 +278,13 @@ CONFIG_YOCTO_PARALLEL_MAKE=""
 #
 # Add pre-mirror url 
 #
-CONFIG_PRE_MIRROR_URL="http://petalinux.xilinx.com/sswreleases/rel-v${PETALINUX_MAJOR_VER}/downloads"
+CONFIG_PRE_MIRROR_URL="file:///tools/Xilinx/PetaLinux/downloads"
 
 #
 # Local sstate feeds settings
 #
-CONFIG_YOCTO_LOCAL_SSTATE_FEEDS_URL=""
-CONFIG_YOCTO_NETWORK_SSTATE_FEEDS=y
-
-#
-# Network sstate feeds URL
-#
-CONFIG_YOCTO_NETWORK_SSTATE_FEEDS_URL="http://petalinux.xilinx.com/sswreleases/rel-v${PETALINUX_MAJOR_VER}/aarch64/sstate-cache"
+CONFIG_YOCTO_LOCAL_SSTATE_FEEDS_URL="/tools/Xilinx/PetaLinux/sstate_aarch64_2021.2/aarch64"
+# CONFIG_YOCTO_NETWORK_SSTATE_FEEDS is not set
 # CONFIG_YOCTO_BB_NO_NETWORK is not set
 # CONFIG_YOCTO_BUILDTOOLS_EXTENDED is not set
 
