@@ -46,15 +46,13 @@ echo "H128B717: device tree copied"
 # 
 # 6) run petalinux-config -> Image Packaging Configuration ->  (/dev/mmcblk1p2) Device node of SD device
 # 
-# 7) Subsystem AUTO Hardware Settings -> Advanced bootable images storage Settings -> u-boot env partition settings -> image storage media (primary sd)    
+# 7) Subsystem AUTO Hardware Settings -> SD/SDIO Settings -> Primary SD/SDIO (psu_sd_1) 
 # 
-# 8) Subsystem AUTO Hardware Settings -> SD/SDIO Settings -> Primary SD/SDIO (psu_sd_1) 
+# 8) Subsystem AUTO Hardware Settings -> Ethernet Settings -> Randomise MAC Address[*] include
 # 
-# 9) Subsystem AUTO Hardware Settings -> Ethernet Settings -> Randomise MAC Address[*] include
+# 9) Subsystem AUTO Hardware Settings -> Ethernet Settings -> Obtain IP Automatically[*] include
 # 
-# 10) Subsystem AUTO Hardware Settings -> Ethernet Settings -> Obtain IP Automatically[*] include
-# 
-# 11) change number of thread to 8
+# 10) change number of thread to 8
 cp $ORG_DIR/petalinux/config $PROJ_DIR/project-spec/configs/config
 echo "H128B717: config file copied"
 echo "H128B717: run petalinux-config --silentconfig"
