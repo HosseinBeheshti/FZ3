@@ -29,9 +29,14 @@ module s15611_driver
    (
      input master_clock,
      input resetn,
+     output s15611_mclk,
+     output s15611_mst,
+     output s15611_cs,
      (* IOB="true" *)
-     output cjmcu1401_si,
-     (* IOB="true" *)
+     input s15611_miso,
+     output s15611_mosi,
+     output s15611_sclk,
+     output s15611_rstb,
      output reg cjmcu1401_clk
    );
 
