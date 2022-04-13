@@ -27,14 +27,19 @@ module cjmcu1401_driver #
     parameter TS_NCLK = 35
   )
   (
-    //! input 100MHz master clock
     input master_clock,
-    output reg sample_capture_trigger,
-    output reg [15:0] pixel_counter_out,
-    (* IOB="true" *)
-    output reg cjmcu1401_si,
-    (* IOB="true" *)
-    output reg cjmcu1401_clk
+    input resetn,
+    // sensor interface
+    output s15611_mclk,
+    output s15611_mst,
+    output s15611_cs,
+    input s15611_miso,
+    output s15611_mosi,
+    output s15611_sclk,
+    output s15611_rstb,
+    input s15611_sync,
+    input s15611_pclk,
+    input [11:0] s15611_data
   );
 
   reg [7:0] clk_counter;

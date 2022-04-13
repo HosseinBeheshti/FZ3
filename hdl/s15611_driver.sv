@@ -29,15 +29,21 @@ module s15611_driver
    (
      input master_clock,
      input resetn,
+	 // sensor interface
      output s15611_mclk,
      output s15611_mst,
      output s15611_cs,
-     (* IOB="true" *)
      input s15611_miso,
      output s15611_mosi,
      output s15611_sclk,
      output s15611_rstb,
-     output reg cjmcu1401_clk
+     input s15611_sync,
+     input s15611_pclk,
+     input [11:0] s15611_data,
+	 // output data
+     output [11:0] data_out,
+     output [9:0] data_index,
+     output data_valid
    );
 
   reg [7:0] clk_counter;
@@ -45,7 +51,7 @@ module s15611_driver
   reg [31:0] si_counter;
   reg initial_interval;
 
-  always @(posedge master_clock)
+  always_ff @(posedge master_clock)
   begin
     if(clk_counter >= SENSOR_CLK_WIDTH_NCLK-1)
     begin
