@@ -18,29 +18,35 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module cjmcu1401_driver #
-  (
-    parameter NUMBER_OF_PIXEL = 128,
-    parameter SI_WIDTH_NCLK = 4,
-    parameter SENSOR_CLK_WIDTH_NCLK = 100,
-    parameter INITIAL_DELAY_NCLK = 18*SENSOR_CLK_WIDTH_NCLK,
-    parameter TS_NCLK = 35
-  )
-  (
-    input master_clock,
-    input resetn,
-    // sensor interface
-    output s15611_mclk,
-    output s15611_mst,
-    output s15611_cs,
-    input s15611_miso,
-    output s15611_mosi,
-    output s15611_sclk,
-    output s15611_rstb,
-    input s15611_sync,
-    input s15611_pclk,
-    input [11:0] s15611_data
-  );
+module sensor_data_acquisition
+  #(
+     parameter NUMBER_OF_PIXEL = 128,
+     parameter SI_WIDTH_NCLK = 4,
+     parameter SENSOR_CLK_WIDTH_NCLK = 100,
+     parameter INITIAL_DELAY_NCLK = 18*SENSOR_CLK_WIDTH_NCLK,
+     parameter TS_NCLK = 35
+   )
+   (
+     input master_clock,
+     input resetn,
+     // sensor interface
+     output s15611_mclk,
+     output s15611_mst,
+     output s15611_cs,
+     input s15611_miso,
+     output s15611_mosi,
+     output s15611_sclk,
+     output s15611_rstb,
+     input s15611_sync,
+     input s15611_pclk,
+     input [11:0] s15611_data,
+     // axis_data
+     input data_tready,
+     output [31:0] data_tdata,
+     output data_tlast,
+     output data_tvalid,
+     output data_tuser
+   );
 
   reg [7:0] clk_counter;
   reg [15:0] pixel_counter;
