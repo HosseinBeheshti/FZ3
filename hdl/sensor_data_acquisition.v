@@ -19,75 +19,160 @@
 
 
 module sensor_data_acquisition
-  #(
-     parameter NUMBER_OF_PIXEL = 128,
-     parameter SI_WIDTH_NCLK = 4,
-     parameter SENSOR_CLK_WIDTH_NCLK = 100,
-     parameter INITIAL_DELAY_NCLK = 18*SENSOR_CLK_WIDTH_NCLK,
-     parameter TS_NCLK = 35
-   )
-   (
-     input master_clock,
-     input resetn,
-     // sensor interface
-     output s15611_mclk,
-     output s15611_mst,
-     output s15611_cs,
-     input s15611_miso,
-     output s15611_mosi,
-     output s15611_sclk,
-     output s15611_rstb,
-     input s15611_sync,
-     input s15611_pclk,
-     input [11:0] s15611_data,
-     // axis_data
-     input data_tready,
-     output [31:0] data_tdata,
-     output data_tlast,
-     output data_tvalid,
-     output data_tuser
-   );
+  (
+    (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME master_clock, FREQ_HZ 40000000" *)
+    input master_clock,
+    input resetn,
+    // sensor interface
+    output s15611_mclk,
+    output s15611_mst,
+    output s15611_cs,
+    input s15611_miso,
+    output s15611_mosi,
+    output s15611_sclk,
+    output s15611_rstb,
+    input s15611_sync,
+    input s15611_pclk,
+    input [11:0] s15611_data,
+    // axis_data
+    (* X_INTERFACE_PARAMETER = "ASSOCIATED_BUSIF data,  FREQ_HZ 40000000" *)
+    input data_tready,
+    output reg [31:0] data_tdata,
+    output reg data_tlast,
+    output reg data_tvalid,
+    // debug port
+    output reg [3:0] dbg_axis_state,
+    output [3:0] dbg_sensor_state,
+    output [11:0] dbg_sensor_raw_data,
+    output [11:0] dbg_sensor_data,
+    output [9:0] dbg_sensor_index,
+    output dbg_sensor_valid
+  );
 
-  reg [7:0] clk_counter;
-  reg [15:0] pixel_counter;
-  reg [31:0] si_counter;
-  reg initial_interval;
+  genvar i;
+  wire [11:0] sensor_data;
+  wire [9:0] sensor_data_index;
+  wire  sensor_data_valid;
+  reg [11:0] sensor_data_reg[5:0];
+  reg [9:0] sensor_data_index_reg[5:0];
+  reg sensor_data_valid_reg[5:0];
+  reg [31:0] time_counter;
+  localparam [31:0] HEADER_VALUE = 32'hAAAAAAAA;
+  localparam [31:0] FOOTER_VALUE = 32'h55555555;
+  localparam [3:0]  IDLE = 0, HEADER = 1, TIME_STAMP = 2, DATA = 3, FOOTER = 4;
+  reg [3:0] axis_state = IDLE;
+
+  s15611_driver s15611_driver_inst
+                (
+                  .master_clock(master_clock),
+                  .resetn(resetn),
+                  // sensor interface
+                  .s15611_mclk(s15611_mclk),
+                  .s15611_mst(s15611_mst),
+                  .s15611_cs(s15611_cs),
+                  .s15611_miso(s15611_miso),
+                  .s15611_mosi(s15611_mosi),
+                  .s15611_sclk(s15611_sclk),
+                  .s15611_rstb(s15611_rstb),
+                  .s15611_sync(s15611_sync),
+                  .s15611_pclk(s15611_pclk),
+                  .s15611_data(s15611_data),
+                  // output data
+                  .data_out(sensor_data),
+                  .data_index(sensor_data_index),
+                  .data_valid(sensor_data_valid),
+                  // debug port
+                  .dbg_state(dbg_sensor_state),
+				  .dbg_sensor_raw_data(dbg_sensor_raw_data),
+                  .dbg_sensor_data(dbg_sensor_data),
+				  .dbg_sensor_index(dbg_sensor_index),
+                  .dbg_sensor_valid(dbg_sensor_valid)
+                );
 
   always @(posedge master_clock)
   begin
-    if(clk_counter >= SENSOR_CLK_WIDTH_NCLK-1)
+    if (resetn)
     begin
-      cjmcu1401_clk = ~cjmcu1401_clk;
-      clk_counter <= 8'd0;
+      time_counter <= time_counter + 1;
+      sensor_data_reg[0] <= sensor_data;
+      sensor_data_index_reg[0] <= sensor_data_index;
+      sensor_data_valid_reg[0] <= sensor_data_valid;
     end
     else
     begin
-      clk_counter = clk_counter +1;
-      if((clk_counter == TS_NCLK) && (initial_interval == 0))
-      begin
-        sample_capture_trigger <= 1'b1;
-        pixel_counter = pixel_counter + 1;
-      end
-      else
-      begin
-        sample_capture_trigger <= 1'b0;
-      end
+      time_counter <= 0;
     end
-    if((32'd6 <= si_counter) && (si_counter <= (32'd6 + SI_WIDTH_NCLK)))
-    begin
-      si_counter = si_counter + 1;
-      cjmcu1401_si = 1'b1;
-      initial_interval = 1'b1;
-    end
-    else if(si_counter >= INITIAL_DELAY_NCLK + NUMBER_OF_PIXEL * SENSOR_CLK_WIDTH_NCLK)
-      si_counter <= 32'd0;
-    else
-    begin
-      cjmcu1401_si = 1'b0;
-      si_counter = si_counter + 1;
-    end
-    if(si_counter >= INITIAL_DELAY_NCLK )
-      initial_interval = 1'b0;
   end
-  assign pixel_counter_out = pixel_counter;
+
+  generate
+    for (i = 0; i < 5; i = i+1)
+    begin: shift_reg
+      always @(posedge master_clock)
+      begin
+        sensor_data_reg[i+1] <= sensor_data_reg[i];
+        sensor_data_index_reg[i+1] <= sensor_data_index_reg[i];
+        sensor_data_valid_reg[i+1] <= sensor_data_valid_reg[i];
+      end
+    end
+  endgenerate
+
+  // prepare data packet
+  always @(posedge master_clock)
+  begin
+    dbg_axis_state <= axis_state;
+    data_tdata <= 0;
+    data_tvalid <= 0;
+    data_tlast <= 0;
+    case (axis_state)
+      IDLE:
+      begin
+        if ((sensor_data_valid == 1) && (sensor_data_valid_reg[0] == 0))
+        begin
+          axis_state <= HEADER;
+        end
+        else
+        begin
+          axis_state <= IDLE;
+        end
+      end
+
+      HEADER:
+      begin
+        data_tdata <= HEADER_VALUE;
+        data_tvalid <= 1;
+        axis_state <= TIME_STAMP;
+      end
+
+      TIME_STAMP:
+      begin
+        data_tdata <= time_counter;
+        data_tvalid <= 1;
+        axis_state <= DATA;
+      end
+
+      DATA:
+      begin
+        if (sensor_data_index_reg[3] < 1023)
+        begin
+          axis_state <= DATA;
+          data_tdata <= {10'd0, sensor_data_index_reg[3], sensor_data_reg[3]};
+          data_tvalid <= 1;
+        end
+        else if (sensor_data_index_reg[3] == 1023)
+        begin
+          axis_state <= FOOTER;
+          data_tdata <= {10'd0, sensor_data_index_reg[3], sensor_data_reg[3]};
+          data_tvalid <= 1;
+        end
+      end
+
+      FOOTER:
+      begin
+        data_tdata <= FOOTER_VALUE;
+        data_tvalid <= 1;
+        data_tlast <= 1;
+        axis_state <= IDLE;
+      end
+    endcase
+  end
 endmodule

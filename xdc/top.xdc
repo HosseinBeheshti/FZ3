@@ -1,3 +1,8 @@
+# PL_REF_CLK_25MHZ_1V8
+set_property PACKAGE_PIN M6 [get_ports pl_ref_clk_25mhz]
+set_property IOSTANDARD LVCMOS18 [get_ports pl_ref_clk_25mhz]
+create_clock -period 40 -name pl_ref_clk_25mhz -waveform {0 20} [get_ports pl_ref_clk_25mhz]
+
 # UART
 set_property IOSTANDARD LVCMOS33 [get_ports uart_rtl_txd]
 set_property IOSTANDARD LVCMOS33 [get_ports uart_rtl_rxd]
@@ -51,3 +56,9 @@ set_property PACKAGE_PIN E14 [get_ports {s15611_data[10]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {s15611_data[10]}]
 set_property PACKAGE_PIN E13 [get_ports {s15611_data[11]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {s15611_data[11]}]
+
+create_clock -period 25 -name s15611_pclk -waveform {0 12.5} [get_ports s15611_pclk]
+set_input_delay -clock s15611_pclk -min 0 [get_ports {s15611_data[*]}]
+set_input_delay -clock s15611_pclk -max 3 [get_ports {s15611_data[*]}]
+set_input_delay -clock s15611_pclk -min 0 [get_ports s15611_sync]
+set_input_delay -clock s15611_pclk -max 3 [get_ports s15611_sync]
