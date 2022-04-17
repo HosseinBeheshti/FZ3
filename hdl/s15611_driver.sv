@@ -20,18 +20,19 @@
 
 module s15611_driver
   #(
-     parameter NUMBER_OF_PIXEL = 128,
-     parameter SI_WIDTH_NCLK = 4,
-     parameter SENSOR_CLK_WIDTH_NCLK = 100,
-     parameter INITIAL_DELAY_NCLK = 18*SENSOR_CLK_WIDTH_NCLK,
-     parameter TS_NCLK = 35
+     parameter MASTER_CLK_MHZ = 100,
+     parameter MCLK_MHZ = 40,
+     parameter NUMBER_OF_PIXEL = 1024,
+     parameter MASTER_START_PULSE_PERIOD = 1162,
+     parameter MASTER_START_PULSE_HIGH_PERIOD = 167,
+     parameter CDC_REG_LENGTH = 4
    )
    (
      input master_clock,
      input resetn,
-	 // sensor interface
+     // sensor interface
      output s15611_mclk,
-     output s15611_mst,
+     output logic s15611_mst,
      output s15611_cs,
      input s15611_miso,
      output s15611_mosi,
@@ -40,52 +41,129 @@ module s15611_driver
      input s15611_sync,
      input s15611_pclk,
      input [11:0] s15611_data,
-	 // output data
-     output [11:0] data_out,
-     output [9:0] data_index,
-     output data_valid
+     // output data
+     output logic [11:0] data_out,
+     output logic [9:0] data_index,
+     output logic data_valid,
+     // debug port
+     output logic [3:0] dbg_state,
+     output logic [11:0] dbg_sensor_raw_data,
+     output logic [11:0] dbg_sensor_data,
+     output logic [9:0] dbg_sensor_index,
+     output logic dbg_sensor_valid
    );
 
-  reg [7:0] clk_counter;
-  reg [15:0] pixel_counter;
-  reg [31:0] si_counter;
-  reg initial_interval;
+  genvar i;
+  logic sensor_clock;
+  logic [15:0] mclk_counter;
+  logic data_capture_triger;
+  logic [15:0] pixel_counter;
+  enum logic [3:0] {BLANKING_PERIOD, SYNC_CLK1, SYNC_CLK2, CAPTURE_DATA} state;
+  (* ASYNC_REG="true" *)
+  logic [11:0] data_in_temp[CDC_REG_LENGTH:0];
+  (* ASYNC_REG="true" *)
+  logic [11:0] data_out_temp[CDC_REG_LENGTH:0];
+  (* ASYNC_REG="true" *)
+  logic [9:0] data_index_temp[CDC_REG_LENGTH:0];
+  (* ASYNC_REG="true" *)
+  logic data_valid_temp[CDC_REG_LENGTH:0];
+  // TODO: implement spi controller interface
+  assign s15611_cs = 1;
+  assign s15611_mosi = 0;
+  assign s15611_sclk = 0;
+  assign s15611_rstb = 0;
 
+  // drive sensor
+  assign s15611_mclk = master_clock;
   always_ff @(posedge master_clock)
   begin
-    if(clk_counter >= SENSOR_CLK_WIDTH_NCLK-1)
+    if(mclk_counter >= MASTER_START_PULSE_PERIOD-1)
     begin
-      cjmcu1401_clk = ~cjmcu1401_clk;
-      clk_counter <= 8'd0;
+      mclk_counter <= 0;
     end
     else
     begin
-      clk_counter = clk_counter +1;
-      if((clk_counter == TS_NCLK) && (initial_interval == 0))
-      begin
-        sample_capture_trigger <= 1'b1;
-        pixel_counter = pixel_counter + 1;
-      end
-      else
-      begin
-        sample_capture_trigger <= 1'b0;
-      end
+      mclk_counter <= mclk_counter + 1;
     end
-    if((32'd6 <= si_counter) && (si_counter <= (32'd6 + SI_WIDTH_NCLK)))
+
+    if (mclk_counter <=  MASTER_START_PULSE_HIGH_PERIOD-1)
     begin
-      si_counter = si_counter + 1;
-      cjmcu1401_si = 1'b1;
-      initial_interval = 1'b1;
+      s15611_mst <= 1;
     end
-    else if(si_counter >= INITIAL_DELAY_NCLK + NUMBER_OF_PIXEL * SENSOR_CLK_WIDTH_NCLK)
-      si_counter <= 32'd0;
     else
     begin
-      cjmcu1401_si = 1'b0;
-      si_counter = si_counter + 1;
+      s15611_mst <= 0;
     end
-    if(si_counter >= INITIAL_DELAY_NCLK )
-      initial_interval = 1'b0;
   end
-  assign pixel_counter_out = pixel_counter;
+
+  // capture data
+  always_ff @(posedge s15611_pclk)
+  begin
+    dbg_state <= state;
+    data_in_temp[0] <= s15611_data;
+    data_out_temp[0] <= 0;
+    data_valid_temp[0] <= 0;
+    case (state)
+      BLANKING_PERIOD :
+      begin
+        if (s15611_sync)
+        begin
+          state <= BLANKING_PERIOD;
+        end
+        else
+        begin
+          state <= SYNC_CLK1;
+        end
+      end
+      SYNC_CLK1 :
+      begin
+        state <= SYNC_CLK2;
+      end
+      SYNC_CLK2 :
+      begin
+        state <= CAPTURE_DATA;
+        data_out_temp[0] <= s15611_data;
+      end
+      CAPTURE_DATA :
+      begin
+        if (pixel_counter <= NUMBER_OF_PIXEL-1)
+        begin
+          state <= CAPTURE_DATA;
+          pixel_counter <= pixel_counter + 1;
+          data_out_temp[0] <= s15611_data;
+          data_index_temp[0] <= pixel_counter + 1;
+          data_valid_temp[0] <= 1;
+        end
+        else
+        begin
+          pixel_counter <= 0;
+          state <= BLANKING_PERIOD;
+        end
+      end
+    endcase
+  end
+
+  // CDC data
+  generate
+    for (i = 0; i < CDC_REG_LENGTH; i++)
+    begin: cdc_reg_delay
+      always_ff @(posedge master_clock)
+      begin
+        data_in_temp[i+1] <= data_in_temp[i];
+        data_out_temp[i+1] <= data_out_temp[i];
+        data_index_temp[i+1] <= data_index_temp[i];
+        data_valid_temp[i+1] <= data_valid_temp[i];
+      end
+    end
+  endgenerate
+
+  assign data_out = data_out_temp[CDC_REG_LENGTH];
+  assign data_index = data_index_temp[CDC_REG_LENGTH];
+  assign data_valid = data_valid_temp[CDC_REG_LENGTH];
+
+  assign dbg_sensor_raw_data = data_in_temp[CDC_REG_LENGTH];
+  assign dbg_sensor_data = data_out_temp[CDC_REG_LENGTH];
+  assign dbg_sensor_index = data_index_temp[CDC_REG_LENGTH];
+  assign dbg_sensor_valid = data_valid_temp[CDC_REG_LENGTH];
+
 endmodule
