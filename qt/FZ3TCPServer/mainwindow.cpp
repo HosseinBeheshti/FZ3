@@ -136,15 +136,6 @@ void MainWindow::on_pushButton_sendMessage_clicked()
 {
     QString receiver = ui->comboBox_receiver->currentText();
 
-    if(receiver=="Broadcast")
-    {
-        foreach (QTcpSocket* socket,connection_set)
-        {
-            sendMessage(socket);
-        }
-    }
-    else
-    {
         foreach (QTcpSocket* socket,connection_set)
         {
             if(socket->socketDescriptor() == receiver.toLongLong())
@@ -153,7 +144,6 @@ void MainWindow::on_pushButton_sendMessage_clicked()
                 break;
             }
         }
-    }
     ui->lineEdit_message->clear();
 }
 
@@ -169,15 +159,6 @@ void MainWindow::on_pushButton_sendAttachment_clicked()
         return;
     }
 
-    if(receiver=="Broadcast")
-    {
-        foreach (QTcpSocket* socket,connection_set)
-        {
-            sendAttachment(socket, filePath);
-        }
-    }
-    else
-    {
         foreach (QTcpSocket* socket,connection_set)
         {
             if(socket->socketDescriptor() == receiver.toLongLong())
@@ -186,7 +167,6 @@ void MainWindow::on_pushButton_sendAttachment_clicked()
                 break;
             }
         }
-    }
     ui->lineEdit_message->clear();
 }
 
@@ -258,7 +238,6 @@ void MainWindow::displayMessage(const QString& str)
 
 void MainWindow::refreshComboBox(){
     ui->comboBox_receiver->clear();
-    ui->comboBox_receiver->addItem("Broadcast");
     foreach(QTcpSocket* socket, connection_set)
         ui->comboBox_receiver->addItem(QString::number(socket->socketDescriptor()));
 }
@@ -386,15 +365,6 @@ void MainWindow::on_Init_dma_clicked()
 
    QString receiver = "DMA initialize DONE";
 
-    if(receiver=="Broadcast")
-    {
-        foreach (QTcpSocket* socket,connection_set)
-        {
-            sendMessage(socket);
-        }
-    }
-    else
-    {
         foreach (QTcpSocket* socket,connection_set)
         {
             if(socket->socketDescriptor() == receiver.toLongLong())
@@ -403,6 +373,5 @@ void MainWindow::on_Init_dma_clicked()
                 break;
             }
         }
-    }
 }
 
