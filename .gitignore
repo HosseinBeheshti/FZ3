@@ -1,5 +1,6 @@
 build/*
 .Xil/*
+.vscode/*
 artifacts/*
 hls/dma_lb_axis_switch/dma_lb_axis_switch/*
 log_data/*
