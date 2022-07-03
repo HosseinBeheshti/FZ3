@@ -11,7 +11,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, &MainWindow::newMessage, this, &MainWindow::displayMessage);
     connect(socket, &QTcpSocket::readyRead, this, &MainWindow::readSocket);
     connect(socket, &QTcpSocket::disconnected, this, &MainWindow::discardSocket);
-    connect(socket, &QAbstractSocket::errorOccurred, this, &MainWindow::displayError);
 
     socket->connectToHost(QHostAddress::LocalHost,8080);
 
@@ -35,7 +34,7 @@ void MainWindow::readSocket()
     QByteArray buffer;
 
     QDataStream socketStream(socket);
-    socketStream.setVersion(QDataStream::Qt_5_15);
+    socketStream.setVersion(QDataStream::Qt_5_13);
 
     socketStream.startTransaction();
     socketStream >> buffer;
@@ -112,7 +111,7 @@ void MainWindow::on_pushButton_sendMessage_clicked()
             QString str = ui->lineEdit_message->text();
 
             QDataStream socketStream(socket);
-            socketStream.setVersion(QDataStream::Qt_5_15);
+            socketStream.setVersion(QDataStream::Qt_5_13);
 
             QByteArray header;
             header.prepend(QString("fileType:message,fileName:null,fileSize:%1;").arg(str.size()).toUtf8());
@@ -152,7 +151,7 @@ void MainWindow::on_pushButton_sendAttachment_clicked()
                 QString fileName(fileInfo.fileName());
 
                 QDataStream socketStream(socket);
-                socketStream.setVersion(QDataStream::Qt_5_15);
+                socketStream.setVersion(QDataStream::Qt_5_13);
 
                 QByteArray header;
                 header.prepend(QString("fileType:attachment,fileName:%1,fileSize:%2;").arg(fileName).arg(m_file.size()).toUtf8());
@@ -161,7 +160,7 @@ void MainWindow::on_pushButton_sendAttachment_clicked()
                 QByteArray byteArray = m_file.readAll();
                 byteArray.prepend(header);
 
-                socketStream.setVersion(QDataStream::Qt_5_15);
+                socketStream.setVersion(QDataStream::Qt_5_13);
                 socketStream << byteArray;
             }else
                 QMessageBox::critical(this,"QTCPClient","Attachment is not readable!");
