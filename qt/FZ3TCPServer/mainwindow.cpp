@@ -58,7 +58,7 @@ void MainWindow::readSocket()
     QByteArray buffer;
 
     QDataStream socketStream(socket);
-    socketStream.setVersion(QDataStream::Qt_5_15);
+    socketStream.setVersion(QDataStream::Qt_5_13);
 
     socketStream.startTransaction();
     socketStream >> buffer;
@@ -179,7 +179,7 @@ void MainWindow::sendMessage(QTcpSocket* socket)
             QString str = ui->lineEdit_message->text();
 
             QDataStream socketStream(socket);
-            socketStream.setVersion(QDataStream::Qt_5_15);
+            socketStream.setVersion(QDataStream::Qt_5_13);
 
             QByteArray header;
             header.prepend(QString("fileType:message,fileName:null,fileSize:%1;").arg(str.size()).toUtf8());
@@ -188,7 +188,7 @@ void MainWindow::sendMessage(QTcpSocket* socket)
             QByteArray byteArray = str.toUtf8();
             byteArray.prepend(header);
 
-            socketStream.setVersion(QDataStream::Qt_5_15);
+            socketStream.setVersion(QDataStream::Qt_5_13);
             socketStream << byteArray;
         }
         else
@@ -211,7 +211,7 @@ void MainWindow::sendAttachment(QTcpSocket* socket, QString filePath)
                 QString fileName(fileInfo.fileName());
 
                 QDataStream socketStream(socket);
-                socketStream.setVersion(QDataStream::Qt_5_15);
+                socketStream.setVersion(QDataStream::Qt_5_13);
 
                 QByteArray header;
                 header.prepend(QString("fileType:attachment,fileName:%1,fileSize:%2;").arg(fileName).arg(m_file.size()).toUtf8());
@@ -243,6 +243,11 @@ void MainWindow::refreshComboBox(){
 }
 
 void MainWindow::on_Init_dma_clicked()
+{
+    init_dma();
+}
+
+void MainWindow::init_dma()
 {
    int tx_size_init = 10;
     int rx_size_init = 10;

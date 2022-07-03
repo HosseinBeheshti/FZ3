@@ -65,6 +65,7 @@ private slots:
 
     void refreshComboBox();
     void on_Init_dma_clicked();
+    void init_dma();
 
 private:
     Ui::MainWindow *ui;
