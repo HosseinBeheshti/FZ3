@@ -12,32 +12,34 @@
 #include <QString>
 #include <QStandardPaths>
 #include <QTcpSocket>
+#include <QTime>
+#include <QThread>
 
-namespace Ui {
-class MainWindow;
+namespace Ui
+{
+	class MainWindow;
 }
 
 class MainWindow : public QMainWindow
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+	explicit MainWindow(QWidget *parent = nullptr);
+	~MainWindow();
 signals:
-    void newMessage(QString);
+	void newMessage(QString);
 private slots:
-    void readSocket();
-    void discardSocket();
-    void displayError(QAbstractSocket::SocketError socketError);
+	void readSocket();
+	void discardSocket();
+	void displayError(QAbstractSocket::SocketError socketError);
 
-    void displayMessage(const QString& str);
-    void on_pushButton_sendMessage_clicked();
-    void on_pushButton_sendAttachment_clicked();
+	void displayMessage(const QString &str);
+
 private:
-    Ui::MainWindow *ui;
+	Ui::MainWindow *ui;
 
-    QTcpSocket* socket;
+	QTcpSocket *socket;
 };
 
 #endif // MAINWINDOW_H

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>369</width>
-    <height>305</height>
+    <width>373</width>
+    <height>368</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,49 +18,22 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_2">
-    <item row="0" column="0">
+    <item row="1" column="0">
      <widget class="QTextBrowser" name="textBrowser_receivedMessages">
       <property name="styleSheet">
        <string notr="true"/>
       </property>
      </widget>
     </item>
-    <item row="1" column="0">
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="1" column="0">
-       <widget class="QPushButton" name="pushButton_sendMessage">
-        <property name="styleSheet">
-         <string notr="true"/>
-        </property>
-        <property name="text">
-         <string>Send Message</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QPushButton" name="pushButton_sendAttachment">
-        <property name="styleSheet">
-         <string notr="true"/>
-        </property>
-        <property name="text">
-         <string>Send Attachment</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0" colspan="2">
-       <widget class="QLineEdit" name="lineEdit_message">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="styleSheet">
-         <string notr="true"/>
-        </property>
-       </widget>
-      </item>
-     </layout>
+    <item row="2" column="0">
+     <layout class="QGridLayout" name="gridLayout"/>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>log console:</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -69,8 +42,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>369</width>
-     <height>21</height>
+     <width>373</width>
+     <height>22</height>
     </rect>
    </property>
   </widget>
