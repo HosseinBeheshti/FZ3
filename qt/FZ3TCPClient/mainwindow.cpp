@@ -6,6 +6,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 {
 	ui->setupUi(this);
 	socket = new QTcpSocket(this);
+    socket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption, 64 * 1024 * 1024);
 
 	connect(this, &MainWindow::newMessage, this, &MainWindow::displayMessage);
 	connect(socket, &QTcpSocket::readyRead, this, &MainWindow::readSocket);
@@ -31,30 +32,21 @@ MainWindow::~MainWindow()
 
 void MainWindow::readSocket()
 {
-	QByteArray buffer;
-	QByteArray fullBuffer;
-	bool footerPacketRecieved = 0;
-	while (!footerPacketRecieved)
-	{
-		while (socket->bytesAvailable() > 0)
-		{
-			buffer.append(socket->readAll());
-			fullBuffer = fullBuffer + buffer;
-		}
-		if (buffer.right(16) == "A5A5A5A5A5A5A5A5")
-		{
-			footerPacketRecieved = 1;
-		}
-	}
-	QString file_time = QTime::currentTime().toString("hh:mm:ss");
-	QString filePath = "/tmp/fz3_data/sensor_data_" + file_time + ".bin";
-	QFile file(filePath);
-	if (file.open(QIODevice::WriteOnly))
-	{
-		file.write(fullBuffer);
-		QString message = QString("INFO :: Attachment from sd:%1 successfully stored on disk under the path %2").arg(socket->socketDescriptor()).arg(QString(filePath));
-		emit newMessage(message);
-	}
+    socket_buffer.append(socket->readAll());
+
+    if (socket_buffer.right(16) == "A5A5A5A5A5A5A5A5")
+    {
+
+        QString file_time = QTime::currentTime().toString("hh:mm:ss");
+        QString filePath = "/tmp/fz3_data/sensor_data_" + file_time + ".bin";
+        QFile file(filePath);
+        if (file.open(QIODevice::WriteOnly))
+        {
+            file.write(socket_buffer);
+            QString message = QString("INFO :: Attachment from sd:%1 successfully stored on disk under the path %2").arg(socket->socketDescriptor()).arg(QString(filePath));
+            emit newMessage(message);
+        }
+    }
 }
 
 void MainWindow::discardSocket()

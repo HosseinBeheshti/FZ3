@@ -38,8 +38,8 @@ private slots:
 
 private:
 	Ui::MainWindow *ui;
-
-	QTcpSocket *socket;
+    QByteArray socket_buffer;
+    QTcpSocket *socket;
 };
 
 #endif // MAINWINDOW_H

@@ -226,15 +226,15 @@ void MainWindow::on_pushButton_sendData_clicked()
 	QString receiver = ui->comboBox_receiver->currentText();
 
 	QByteArray fileData;
-	for (int i = 0; i < 10000; i++)
+    for (int i = 0; i < 100000; i++)
 	{
 		fileData.prepend(QByteArray::fromHex("41"));
 	}
-	for (int i = 0; i < 10000; i++)
+    for (int i = 0; i < 100000; i++)
 	{
 		fileData.append(QByteArray::fromHex("42"));
 	}
-	for (int i = 0; i < 10000; i++)
+    for (int i = 0; i < 100000; i++)
 	{
 		fileData.append(QByteArray::fromHex("43"));
 	}
@@ -259,30 +259,32 @@ void MainWindow::sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr, u
 			QByteArray data = *fileDataPtr;
 			QString tmpHeader = "fileType:fz3_data: ";
 			QByteArray header = tmpHeader.toLocal8Bit();
-			bytes = socket->write(header);
-			while (socket->waitForBytesWritten())
-			{
-				usleep(10);
-			}
+            data.prepend(header);
+//			bytes = socket->write(header);
+//			while (socket->waitForBytesWritten())
+//			{
+//				usleep(10);
+//			}
 
-			int packetSize = 100000;
-			unsigned long long numberOfPacket = fileDataSize / packetSize;
-			unsigned long long currentPacket = 0;
+//			int packetSize = 100000;
+//			unsigned long long numberOfPacket = fileDataSize / packetSize;
+//			unsigned long long currentPacket = 0;
 
-			while (currentPacket < numberOfPacket)
-			{
-				bytes = socket->write(data.left(packetSize));
-				while (socket->waitForBytesWritten())
-				{
-					usleep(10);
-				}
-				data.remove(0, packetSize);
-				currentPacket++;
-			}
+//			while (currentPacket < numberOfPacket)
+//			{
+//				bytes = socket->write(data.left(packetSize));
+//				while (socket->waitForBytesWritten())
+//				{
+//					usleep(10);
+//				}
+//				data.remove(0, packetSize);
+//				currentPacket++;
+//			}
 
 			QString tmpFooter = "A5A5A5A5A5A5A5A5";
 			QByteArray footer = tmpFooter.toLocal8Bit();
-			bytes = socket->write(footer);
+            data.append(footer);
+            bytes = socket->write(data);
 			while (socket->waitForBytesWritten())
 			{
 				usleep(10);
