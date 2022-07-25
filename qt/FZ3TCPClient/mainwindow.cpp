@@ -45,6 +45,7 @@ void MainWindow::readSocket()
             file.write(socket_buffer);
             QString message = QString("INFO :: Attachment from sd:%1 successfully stored on disk under the path %2").arg(socket->socketDescriptor()).arg(QString(filePath));
             emit newMessage(message);
+            socket_buffer.remove(1,socket_buffer.size());
         }
     }
 }
