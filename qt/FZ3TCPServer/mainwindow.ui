@@ -28,7 +28,7 @@
       </property>
       <item>
        <property name="text">
-        <string>Broadcast</string>
+        <string>Select client ...</string>
        </property>
       </item>
      </widget>

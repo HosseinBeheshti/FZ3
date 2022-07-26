@@ -55,7 +55,7 @@ private slots:
 	void discardSocket();
 	void displayError(QAbstractSocket::SocketError socketError);
 	void displayMessage(const QString &str);
-    void sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr,unsigned long long fileDataSize);
+	void sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr, char packetType);
 	void refreshComboBox();
 	void init_dma();
 	void on_pushButton_init_dma_clicked();

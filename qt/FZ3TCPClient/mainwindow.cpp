@@ -6,13 +6,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 {
 	ui->setupUi(this);
 	socket = new QTcpSocket(this);
-    socket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption, 64 * 1024 * 1024);
+	socket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption, 64 * 1024 * 1024);
 
 	connect(this, &MainWindow::newMessage, this, &MainWindow::displayMessage);
 	connect(socket, &QTcpSocket::readyRead, this, &MainWindow::readSocket);
 	connect(socket, &QTcpSocket::disconnected, this, &MainWindow::discardSocket);
 
-	socket->connectToHost(QHostAddress::LocalHost, 1992);
+	socket->connectToHost("10.1.1.11", 1992);
 
 	if (socket->waitForConnected())
 		ui->statusBar->showMessage("Connected to Server");
@@ -32,22 +32,22 @@ MainWindow::~MainWindow()
 
 void MainWindow::readSocket()
 {
-    socket_buffer.append(socket->readAll());
+	socket_buffer.append(socket->readAll());
 
-    if (socket_buffer.right(16) == "A5A5A5A5A5A5A5A5")
-    {
+	if (socket_buffer.right(16) == "A5A5A5A5A5A5A5A5")
+	{
 
-        QString file_time = QTime::currentTime().toString("hh:mm:ss");
-        QString filePath = "/tmp/fz3_data/sensor_data_" + file_time + ".bin";
-        QFile file(filePath);
-        if (file.open(QIODevice::WriteOnly))
-        {
-            file.write(socket_buffer);
-            QString message = QString("INFO :: Attachment from sd:%1 successfully stored on disk under the path %2").arg(socket->socketDescriptor()).arg(QString(filePath));
-            emit newMessage(message);
-            socket_buffer.remove(1,socket_buffer.size());
-        }
-    }
+		QString file_time = QTime::currentTime().toString("hh:mm:ss");
+		QString filePath = "/home/hossein/fz3_data/sensor_data_" + file_time + ".bin";
+		QFile file(filePath);
+		if (file.open(QIODevice::WriteOnly))
+		{
+			file.write(socket_buffer);
+			QString message = QString("INFO :: Attachment from sd:%1 successfully stored on disk under the path %2").arg(socket->socketDescriptor()).arg(QString(filePath));
+			emit newMessage(message);
+			socket_buffer.remove(1, socket_buffer.size());
+		}
+	}
 }
 
 void MainWindow::discardSocket()

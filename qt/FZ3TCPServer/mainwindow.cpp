@@ -26,6 +26,7 @@ MainWindow::~MainWindow()
 	{
 		socket->close();
 		socket->deleteLater();
+		socket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption, 64 * 1024 * 1024);
 	}
 
 	m_server->close();
@@ -225,69 +226,78 @@ void MainWindow::on_pushButton_sendData_clicked()
 
 	QString receiver = ui->comboBox_receiver->currentText();
 
-	QByteArray fileData;
-    for (int i = 0; i < 100000; i++)
-	{
-		fileData.prepend(QByteArray::fromHex("41"));
-	}
-    for (int i = 0; i < 100000; i++)
-	{
-		fileData.append(QByteArray::fromHex("42"));
-	}
-    for (int i = 0; i < 100000; i++)
-	{
-		fileData.append(QByteArray::fromHex("43"));
-	}
-
 	foreach (QTcpSocket *socket, connection_set)
 	{
 		if (socket->socketDescriptor() == receiver.toLongLong())
 		{
-			sendDataToClient(socket, &fileData, fileData.size());
+			QString counter_data;
+			QByteArray fileData;
+			int i = 0;
+			// send header
+			sendDataToClient(socket, &fileData, 'h');
+			for (i = 0; i < 255; i++)
+			{
+				counter_data.append(i);
+			}
+			for (i = 0; i < 40 * 4 * 1024; i++)
+			{
+				fileData.append(counter_data);
+			}
+			for (i = 0; i < 10; i++)
+			{
+				sendDataToClient(socket, &fileData, 'd');
+			}
+			// send footer
+			sendDataToClient(socket, &fileData, 'f');
 			break;
 		}
 	}
 }
 
-void MainWindow::sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr, unsigned long long fileDataSize)
+void MainWindow::sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr, char packetType)
 {
 	if (socket)
 	{
 		if (socket->isOpen())
 		{
+
 			int64_t bytes;
-			QByteArray data = *fileDataPtr;
-			QString tmpHeader = "fileType:fz3_data: ";
-			QByteArray header = tmpHeader.toLocal8Bit();
-            data.prepend(header);
-//			bytes = socket->write(header);
-//			while (socket->waitForBytesWritten())
-//			{
-//				usleep(10);
-//			}
-
-//			int packetSize = 100000;
-//			unsigned long long numberOfPacket = fileDataSize / packetSize;
-//			unsigned long long currentPacket = 0;
-
-//			while (currentPacket < numberOfPacket)
-//			{
-//				bytes = socket->write(data.left(packetSize));
-//				while (socket->waitForBytesWritten())
-//				{
-//					usleep(10);
-//				}
-//				data.remove(0, packetSize);
-//				currentPacket++;
-//			}
-
-			QString tmpFooter = "A5A5A5A5A5A5A5A5";
-			QByteArray footer = tmpFooter.toLocal8Bit();
-            data.append(footer);
-            bytes = socket->write(data);
-			while (socket->waitForBytesWritten())
+			switch (packetType)
 			{
-				usleep(10);
+			case 'h':
+			{
+				QString tmpHeader = "fileType:fz3_data: ";
+				QByteArray header = tmpHeader.toLocal8Bit();
+				bytes = socket->write(header);
+				while (socket->waitForBytesWritten())
+				{
+					usleep(10);
+				}
+				break;
+			}
+			case 'f':
+			{
+				QString tmpFooter = "A5A5A5A5A5A5A5A5";
+				QByteArray footer = tmpFooter.toLocal8Bit();
+				bytes = socket->write(footer);
+				while (socket->waitForBytesWritten())
+				{
+					usleep(10);
+				}
+				break;
+			}
+			case 'd':
+			{
+				QByteArray data = *fileDataPtr;
+				bytes = socket->write(data);
+				while (socket->waitForBytesWritten())
+				{
+					usleep(10);
+				}
+				break;
+			}
+			default:
+				break;
 			}
 		}
 		else
