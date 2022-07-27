@@ -55,11 +55,12 @@ private slots:
 	void discardSocket();
 	void displayError(QAbstractSocket::SocketError socketError);
 	void displayMessage(const QString &str);
-	void sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr, char packetType);
 	void refreshComboBox();
 	void init_dma();
 	void on_pushButton_init_dma_clicked();
-	void on_pushButton_sendData_clicked();
+    void sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr);
+    void on_pushButton_stopSendData_clicked();
+    void on_pushButton_sendData_clicked();
 
 private:
 	Ui::MainWindow *ui;
@@ -72,6 +73,8 @@ private:
 	char *tx_buf, *rx_buf;
 	axidma_dev_t axidma_dev;
 	const array_t *tx_chans, *rx_chans;
+    struct axidma_inout_transaction trans;
+
 	QString LastLogQstring;
 };
 

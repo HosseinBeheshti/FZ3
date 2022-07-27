@@ -5,6 +5,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 {
 	ui->setupUi(this);
 	ui->pushButton_init_dma->setEnabled(false);
+	ui->pushButton_sendData->setEnabled(false);
+	ui->pushButton_stopSendData->setEnabled(false);
 	m_server = new QTcpServer();
 
 	if (m_server->listen(QHostAddress::Any, 1992))
@@ -97,8 +99,8 @@ void MainWindow::refreshComboBox()
 
 void MainWindow::init_dma()
 {
-	int tx_size_init = 10;
-	int rx_size_init = 10;
+	int tx_size_init = 50;
+	int rx_size_init = 50;
 	tx_channel = 0;
 	rx_channel = 1;
 	tx_size = MIB_TO_BYTE(tx_size_init);
@@ -203,6 +205,55 @@ void MainWindow::init_dma()
 	ui->textBrowser_receivedMessages->append(LastLogQstring);
 	std::cout << LastLogQstring.toStdString() << std::endl;
 
+	size_t i;
+	int *transmit_buffer, *receive_buffer;
+
+	transmit_buffer = (int *)tx_buf;
+	receive_buffer = (int *)rx_buf;
+
+	// Fill the buffer with integer patterns
+	for (i = 0; i < tx_size / sizeof(int); i++)
+	{
+		transmit_buffer[i] = TEST_PATTERN(i);
+	}
+
+	// Fill in any leftover bytes if it's not aligned
+	for (i = 0; i < tx_size % sizeof(int); i++)
+	{
+		tx_buf[i] = TEST_PATTERN(i + tx_size / sizeof(int));
+	}
+
+	// Fill the buffer with integer patterns
+	for (i = 0; i < rx_size / sizeof(int); i++)
+	{
+		receive_buffer[i] = TEST_PATTERN(i + tx_size);
+	}
+
+	// Fill in any leftover bytes if it's not aligned
+	for (i = 0; i < rx_size % sizeof(int); i++)
+	{
+		rx_buf[i] = TEST_PATTERN(i + tx_size + rx_size / sizeof(int));
+	}
+
+	// Perform the DMA transaction
+    rc = axidma_twoway_transfer(axidma_dev, tx_channel, tx_buf, tx_size, NULL,
+                                rx_channel, rx_buf, rx_size, NULL, true);
+	if (rc < 0)
+	{
+		LastLogQstring = "Failed to perform the AXI DMA read-write transfer";
+		ui->textBrowser_receivedMessages->append(LastLogQstring);
+		std::cout << LastLogQstring.toStdString() << std::endl;
+	}
+	else
+	{
+		LastLogQstring = "Single transfer test successfully completed!";
+		ui->textBrowser_receivedMessages->append(LastLogQstring);
+		std::cout << LastLogQstring.toStdString() << std::endl;
+	}
+
+	// Verify that the data in the buffer changed
+	// TODO
+
 	XDma_lb_axis_switch_Set_dma_loopback_en(&loop_back_sw, 0);
 	XDma_lb_axis_switch_Release(&loop_back_sw);
 	LastLogQstring = "AXI DMA sw loopback disabled";
@@ -219,22 +270,55 @@ void MainWindow::init_dma()
 void MainWindow::on_pushButton_init_dma_clicked()
 {
 	init_dma();
+	ui->pushButton_sendData->setEnabled(true);
+}
+
+void MainWindow::sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr)
+{
+	if (socket)
+	{
+		if (socket->isOpen())
+		{
+
+			uint64_t bytes;
+			QByteArray data = *fileDataPtr;
+			bytes = socket->write(data);
+			while (socket->waitForBytesWritten())
+			{
+				usleep(10);
+			}
+		}
+		else
+			QMessageBox::critical(this, "QTCPServer", "Socket doesn't seem to be opened");
+	}
+	else
+		QMessageBox::critical(this, "QTCPServer", "Not connected");
 }
 
 void MainWindow::on_pushButton_sendData_clicked()
 {
 
 	QString receiver = ui->comboBox_receiver->currentText();
+    ui->pushButton_sendData->setEnabled(false);
+    ui->pushButton_stopSendData->setEnabled(true);
 
 	foreach (QTcpSocket *socket, connection_set)
 	{
 		if (socket->socketDescriptor() == receiver.toLongLong())
 		{
+			/* This performs a one-way transfer over AXI DMA, the direction being specified
+			 * by the user. The user determines if this is blocking or not with `wait. */
+            rc = axidma_oneway_transfer(axidma_dev, rx_channel, rx_buf, rx_size, true);
+			if (rc < 0)
+			{
+				LastLogQstring = "Failed to perform the AXI DMA read transfer";
+				ui->textBrowser_receivedMessages->append(LastLogQstring);
+				std::cout << LastLogQstring.toStdString() << std::endl;
+			}
 			QString counter_data;
 			QByteArray fileData;
 			int i = 0;
 			// send header
-			sendDataToClient(socket, &fileData, 'h');
 			for (i = 0; i < 255; i++)
 			{
 				counter_data.append(i);
@@ -245,64 +329,15 @@ void MainWindow::on_pushButton_sendData_clicked()
 			}
 			for (i = 0; i < 10; i++)
 			{
-				sendDataToClient(socket, &fileData, 'd');
+                sendDataToClient(socket, &fileData);
 			}
-			// send footer
-			sendDataToClient(socket, &fileData, 'f');
 			break;
 		}
 	}
 }
-
-void MainWindow::sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr, char packetType)
+void MainWindow::on_pushButton_stopSendData_clicked()
 {
-	if (socket)
-	{
-		if (socket->isOpen())
-		{
 
-			int64_t bytes;
-			switch (packetType)
-			{
-			case 'h':
-			{
-				QString tmpHeader = "fileType:fz3_data: ";
-				QByteArray header = tmpHeader.toLocal8Bit();
-				bytes = socket->write(header);
-				while (socket->waitForBytesWritten())
-				{
-					usleep(10);
-				}
-				break;
-			}
-			case 'f':
-			{
-				QString tmpFooter = "A5A5A5A5A5A5A5A5";
-				QByteArray footer = tmpFooter.toLocal8Bit();
-				bytes = socket->write(footer);
-				while (socket->waitForBytesWritten())
-				{
-					usleep(10);
-				}
-				break;
-			}
-			case 'd':
-			{
-				QByteArray data = *fileDataPtr;
-				bytes = socket->write(data);
-				while (socket->waitForBytesWritten())
-				{
-					usleep(10);
-				}
-				break;
-			}
-			default:
-				break;
-			}
-		}
-		else
-			QMessageBox::critical(this, "QTCPServer", "Socket doesn't seem to be opened");
-	}
-	else
-		QMessageBox::critical(this, "QTCPServer", "Not connected");
+    ui->pushButton_sendData->setEnabled(true);
+    ui->pushButton_stopSendData->setEnabled(false);
 }
