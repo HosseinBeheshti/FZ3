@@ -236,8 +236,8 @@ void MainWindow::init_dma()
 	}
 
 	// Perform the DMA transaction
-    rc = axidma_twoway_transfer(axidma_dev, tx_channel, tx_buf, tx_size, NULL,
-                                rx_channel, rx_buf, rx_size, NULL, true);
+	rc = axidma_twoway_transfer(axidma_dev, tx_channel, tx_buf, tx_size, NULL,
+								rx_channel, rx_buf, rx_size, NULL, true);
 	if (rc < 0)
 	{
 		LastLogQstring = "Failed to perform the AXI DMA read-write transfer";
@@ -299,45 +299,55 @@ void MainWindow::on_pushButton_sendData_clicked()
 {
 
 	QString receiver = ui->comboBox_receiver->currentText();
-    ui->pushButton_sendData->setEnabled(false);
-    ui->pushButton_stopSendData->setEnabled(true);
+	QString captureMode = ui->comboBox_sensor->currentText();
+	ui->pushButton_sendData->setEnabled(false);
+	ui->pushButton_stopSendData->setEnabled(true);
 
 	foreach (QTcpSocket *socket, connection_set)
 	{
 		if (socket->socketDescriptor() == receiver.toLongLong())
 		{
-			/* This performs a one-way transfer over AXI DMA, the direction being specified
-			 * by the user. The user determines if this is blocking or not with `wait. */
-            rc = axidma_oneway_transfer(axidma_dev, rx_channel, rx_buf, rx_size, true);
-			if (rc < 0)
+			if (captureMode == "raw data")
 			{
-				LastLogQstring = "Failed to perform the AXI DMA read transfer";
-				ui->textBrowser_receivedMessages->append(LastLogQstring);
-				std::cout << LastLogQstring.toStdString() << std::endl;
+                QString counter_data;
+                QByteArray fileData;
+                /* This performs a one-way transfer over AXI DMA, the direction being specified
+				 * by the user. The user determines if this is blocking or not with `wait. */
+                rc = axidma_oneway_transfer(axidma_dev, rx_channel, rx_buf, rx_size, true);
+				if (rc < 0)
+				{
+					LastLogQstring = "Failed to perform the AXI DMA read transfer";
+					ui->textBrowser_receivedMessages->append(LastLogQstring);
+					std::cout << LastLogQstring.toStdString() << std::endl;
+				}
+
+                    LastLogQstring = "rc" +QString::number(rc) ;
+                    ui->textBrowser_receivedMessages->append(LastLogQstring);
+				int i = 0;
+				// send header
+				for (i = 0; i < 255; i++)
+				{
+					counter_data.append(i);
+				}
+				for (i = 0; i < 40 * 4 * 1024; i++)
+				{
+					fileData.append(counter_data);
+				}
+				for (i = 0; i < 10; i++)
+				{
+					sendDataToClient(socket, &fileData);
+				}
+				break;
 			}
-			QString counter_data;
-			QByteArray fileData;
-			int i = 0;
-			// send header
-			for (i = 0; i < 255; i++)
+			else if (captureMode == "processed data")
 			{
-				counter_data.append(i);
 			}
-			for (i = 0; i < 40 * 4 * 1024; i++)
-			{
-				fileData.append(counter_data);
-			}
-			for (i = 0; i < 10; i++)
-			{
-                sendDataToClient(socket, &fileData);
-			}
-			break;
 		}
 	}
 }
 void MainWindow::on_pushButton_stopSendData_clicked()
 {
 
-    ui->pushButton_sendData->setEnabled(true);
-    ui->pushButton_stopSendData->setEnabled(false);
+	ui->pushButton_sendData->setEnabled(true);
+	ui->pushButton_stopSendData->setEnabled(false);
 }

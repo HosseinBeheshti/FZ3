@@ -74,8 +74,8 @@ private:
 	axidma_dev_t axidma_dev;
 	const array_t *tx_chans, *rx_chans;
     struct axidma_inout_transaction trans;
-
-	QString LastLogQstring;
+    bool data_transmit_en;
+    QString LastLogQstring;
 };
 
 #endif // MAINWINDOW_H
