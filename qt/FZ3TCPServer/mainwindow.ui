@@ -85,12 +85,12 @@
      <widget class="QComboBox" name="comboBox_sensor">
       <item>
        <property name="text">
-        <string>processed data</string>
+        <string>raw data</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>raw data</string>
+        <string>processed data</string>
        </property>
       </item>
      </widget>

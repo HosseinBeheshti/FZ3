@@ -83,6 +83,8 @@ int XDma_lb_axis_switch_Release(XDma_lb_axis_switch *InstancePtr);
 
 void XDma_lb_axis_switch_Set_dma_loopback_en(XDma_lb_axis_switch *InstancePtr, u32 Data);
 u32 XDma_lb_axis_switch_Get_dma_loopback_en(XDma_lb_axis_switch *InstancePtr);
+void XDma_lb_axis_switch_Set_dma_to_ps_counter_en(XDma_lb_axis_switch *InstancePtr, u32 Data);
+u32 XDma_lb_axis_switch_Get_dma_to_ps_counter_en(XDma_lb_axis_switch *InstancePtr);
 
 #ifdef __cplusplus
 }

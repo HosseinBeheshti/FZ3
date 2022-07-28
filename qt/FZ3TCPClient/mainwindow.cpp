@@ -34,11 +34,11 @@ void MainWindow::readSocket()
 {
 	socket_buffer.append(socket->readAll());
 
-	if (socket_buffer.right(16) == "A5A5A5A5A5A5A5A5")
+    if (socket_buffer.size() >= 500*1000*1000)
 	{
 
 		QString file_time = QTime::currentTime().toString("hh:mm:ss");
-		QString filePath = "/home/hossein/fz3_data/sensor_data_" + file_time + ".bin";
+        QString filePath = "/fz3_data/sensor_data_" + file_time + ".bin";
 		QFile file(filePath);
 		if (file.open(QIODevice::WriteOnly))
 		{

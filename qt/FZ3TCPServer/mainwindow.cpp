@@ -313,7 +313,7 @@ void MainWindow::on_pushButton_sendData_clicked()
                 QByteArray fileData;
                 /* This performs a one-way transfer over AXI DMA, the direction being specified
 				 * by the user. The user determines if this is blocking or not with `wait. */
-                rc = axidma_oneway_transfer(axidma_dev, rx_channel, rx_buf, rx_size, true);
+//                rc = axidma_oneway_transfer(axidma_dev, rx_channel, rx_buf, rx_size, true);
 				if (rc < 0)
 				{
 					LastLogQstring = "Failed to perform the AXI DMA read transfer";
@@ -325,15 +325,15 @@ void MainWindow::on_pushButton_sendData_clicked()
                     ui->textBrowser_receivedMessages->append(LastLogQstring);
 				int i = 0;
 				// send header
-				for (i = 0; i < 255; i++)
+                for (i = 0; i < 100; i++)
 				{
 					counter_data.append(i);
 				}
-				for (i = 0; i < 40 * 4 * 1024; i++)
+                for (i = 0; i < 10 *1000 ; i++)
 				{
 					fileData.append(counter_data);
 				}
-				for (i = 0; i < 10; i++)
+                for (i = 0; i < 1024; i++)
 				{
 					sendDataToClient(socket, &fileData);
 				}

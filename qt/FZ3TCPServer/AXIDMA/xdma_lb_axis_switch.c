@@ -35,3 +35,20 @@ u32 XDma_lb_axis_switch_Get_dma_loopback_en(XDma_lb_axis_switch *InstancePtr) {
     return Data;
 }
 
+void XDma_lb_axis_switch_Set_dma_to_ps_counter_en(XDma_lb_axis_switch *InstancePtr, u32 Data) {
+    Xil_AssertVoid(InstancePtr != NULL);
+    Xil_AssertVoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    XDma_lb_axis_switch_WriteReg(InstancePtr->Control_BaseAddress, XDMA_LB_AXIS_SWITCH_CONTROL_ADDR_DMA_TO_PS_COUNTER_EN_DATA, Data);
+}
+
+u32 XDma_lb_axis_switch_Get_dma_to_ps_counter_en(XDma_lb_axis_switch *InstancePtr) {
+    u32 Data;
+
+    Xil_AssertNonvoid(InstancePtr != NULL);
+    Xil_AssertNonvoid(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+    Data = XDma_lb_axis_switch_ReadReg(InstancePtr->Control_BaseAddress, XDMA_LB_AXIS_SWITCH_CONTROL_ADDR_DMA_TO_PS_COUNTER_EN_DATA);
+    return Data;
+}
+
