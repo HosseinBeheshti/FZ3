@@ -40,8 +40,6 @@ void dma_lb_axis_switch(
 	}
 	else if (dma_to_ps_counter_en == 1)
 	{
-		from_dma.read(tmp2);
-		to_pl.write(tmp2);
 		if (send_counter_data == 1)
 		{
 			tmp3.data = counter2;
@@ -50,9 +48,15 @@ void dma_lb_axis_switch(
 	}
 	else
 	{
-		from_dma.read(tmp2);
-		to_pl.write(tmp2);
-		from_pl.read(tmp3);
-		to_dma.write(tmp3);
+		if (!from_dma.empty())
+		{
+			from_dma.read(tmp2);
+			to_pl.write(tmp2);
+		}
+		if (!from_pl.empty())
+		{
+			from_pl.read(tmp3);
+			to_dma.write(tmp3);
+		}
 	}
 }
