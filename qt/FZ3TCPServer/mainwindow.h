@@ -76,6 +76,7 @@ private:
     struct axidma_inout_transaction trans;
     XDma_lb_axis_switch loop_back_sw;
     QString LastLogQstring;
+    int sensor_data_stream;
 };
 
 #endif // MAINWINDOW_H

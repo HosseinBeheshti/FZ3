@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 	ui->pushButton_sendData->setEnabled(false);
 	ui->pushButton_stopSendData->setEnabled(false);
 	m_server = new QTcpServer();
+	sensor_data_stream = 0;
 
 	if (m_server->listen(QHostAddress::Any, 1992))
 	{
@@ -132,7 +133,7 @@ void MainWindow::init_dma()
 		ui->textBrowser_receivedMessages->append(LastLogQstring);
 		std::cout << LastLogQstring.toStdString() << std::endl;
 	}
-    XDma_lb_axis_switch_Set_dma_loopback_en(&loop_back_sw, 1);
+	XDma_lb_axis_switch_Set_dma_loopback_en(&loop_back_sw, 1);
 	LastLogQstring = "AXI DMA sw loopback enabled";
 	ui->textBrowser_receivedMessages->append(LastLogQstring);
 	std::cout << LastLogQstring.toStdString() << std::endl;
@@ -253,7 +254,7 @@ void MainWindow::init_dma()
 	// Verify that the data in the buffer changed
 	// TODO
 
-    XDma_lb_axis_switch_Set_dma_loopback_en(&loop_back_sw, 0);
+	XDma_lb_axis_switch_Set_dma_loopback_en(&loop_back_sw, 0);
 	LastLogQstring = "AXI DMA sw loopback disabled";
 	ui->textBrowser_receivedMessages->append(LastLogQstring);
 	std::cout << LastLogQstring.toStdString() << std::endl;
@@ -300,40 +301,41 @@ void MainWindow::on_pushButton_sendData_clicked()
 	QString captureMode = ui->comboBox_sensor->currentText();
 	ui->pushButton_sendData->setEnabled(false);
 	ui->pushButton_stopSendData->setEnabled(true);
-
-	foreach (QTcpSocket *socket, connection_set)
+	sensor_data_stream = 1;
+	while (sensor_data_stream == 1)
 	{
-		if (socket->socketDescriptor() == receiver.toLongLong())
+		foreach (QTcpSocket *socket, connection_set)
 		{
-			if (captureMode == "raw data")
+			if (socket->socketDescriptor() == receiver.toLongLong())
 			{
-				/* This performs a one-way transfer over AXI DMA, the direction being specified
-				 * by the user. The user determines if this is blocking or not with `wait. */
-				rc = axidma_oneway_transfer(axidma_dev, rx_channel, rx_buf, rx_size, true);
-				if (rc < 0)
+				if (captureMode == "raw data")
 				{
-					LastLogQstring = "Failed to perform the AXI DMA read transfer";
+					/* This performs a one-way transfer over AXI DMA, the direction being specified
+					 * by the user. The user determines if this is blocking or not with `wait. */
+					rc = axidma_oneway_transfer(axidma_dev, rx_channel, rx_buf, rx_size, true);
+					if (rc < 0)
+					{
+						LastLogQstring = "Failed to perform the AXI DMA read transfer";
+						ui->textBrowser_receivedMessages->append(LastLogQstring);
+						std::cout << LastLogQstring.toStdString() << std::endl;
+					}
+
+					QByteArray fileData(QByteArray::fromRawData(rx_buf, rx_size));
+					LastLogQstring = "fileData size is:" + QString::number(fileData.size());
 					ui->textBrowser_receivedMessages->append(LastLogQstring);
 					std::cout << LastLogQstring.toStdString() << std::endl;
+					sendDataToClient(socket, &fileData);
 				}
-
-//                const char sensor_receive_buffer = rx_buf;
-                QByteArray fileData(QByteArray::fromRawData(rx_buf, rx_size));
-                LastLogQstring = "fileData size is:" + QString::number(fileData.size());
-                ui->textBrowser_receivedMessages->append(LastLogQstring);
-                std::cout << LastLogQstring.toStdString() << std::endl;
-                sendDataToClient(socket, &fileData);
-				break;
-			}
-			else if (captureMode == "processed data")
-			{
+				else if (captureMode == "processed data")
+				{
+				}
 			}
 		}
 	}
 }
 void MainWindow::on_pushButton_stopSendData_clicked()
 {
-
+	sensor_data_stream = 0;
 	ui->pushButton_sendData->setEnabled(true);
 	ui->pushButton_stopSendData->setEnabled(false);
 }
