@@ -117,7 +117,6 @@ void MainWindow::init_dma()
 	ui->textBrowser_receivedMessages->append(LastLogQstring);
 	std::cout << LastLogQstring.toStdString() << std::endl;
 	// setup axis switch
-	XDma_lb_axis_switch loop_back_sw;
 	const char *loop_back_sw_name = "dma_lb_axis_switch";
 	int sw_init_status = 0;
 	sw_init_status = XDma_lb_axis_switch_Initialize(&loop_back_sw, loop_back_sw_name);
@@ -133,7 +132,7 @@ void MainWindow::init_dma()
 		ui->textBrowser_receivedMessages->append(LastLogQstring);
 		std::cout << LastLogQstring.toStdString() << std::endl;
 	}
-	XDma_lb_axis_switch_Set_dma_loopback_en(&loop_back_sw, 1);
+    XDma_lb_axis_switch_Set_dma_loopback_en(&loop_back_sw, 1);
 	LastLogQstring = "AXI DMA sw loopback enabled";
 	ui->textBrowser_receivedMessages->append(LastLogQstring);
 	std::cout << LastLogQstring.toStdString() << std::endl;
@@ -254,8 +253,7 @@ void MainWindow::init_dma()
 	// Verify that the data in the buffer changed
 	// TODO
 
-	XDma_lb_axis_switch_Set_dma_loopback_en(&loop_back_sw, 0);
-	XDma_lb_axis_switch_Release(&loop_back_sw);
+    XDma_lb_axis_switch_Set_dma_loopback_en(&loop_back_sw, 0);
 	LastLogQstring = "AXI DMA sw loopback disabled";
 	ui->textBrowser_receivedMessages->append(LastLogQstring);
 	std::cout << LastLogQstring.toStdString() << std::endl;
@@ -309,11 +307,9 @@ void MainWindow::on_pushButton_sendData_clicked()
 		{
 			if (captureMode == "raw data")
 			{
-                QString counter_data;
-                QByteArray fileData;
-                /* This performs a one-way transfer over AXI DMA, the direction being specified
+				/* This performs a one-way transfer over AXI DMA, the direction being specified
 				 * by the user. The user determines if this is blocking or not with `wait. */
-//                rc = axidma_oneway_transfer(axidma_dev, rx_channel, rx_buf, rx_size, true);
+				rc = axidma_oneway_transfer(axidma_dev, rx_channel, rx_buf, rx_size, true);
 				if (rc < 0)
 				{
 					LastLogQstring = "Failed to perform the AXI DMA read transfer";
@@ -321,22 +317,12 @@ void MainWindow::on_pushButton_sendData_clicked()
 					std::cout << LastLogQstring.toStdString() << std::endl;
 				}
 
-                    LastLogQstring = "rc" +QString::number(rc) ;
-                    ui->textBrowser_receivedMessages->append(LastLogQstring);
-				int i = 0;
-				// send header
-                for (i = 0; i < 100; i++)
-				{
-					counter_data.append(i);
-				}
-                for (i = 0; i < 10 *1000 ; i++)
-				{
-					fileData.append(counter_data);
-				}
-                for (i = 0; i < 1024; i++)
-				{
-					sendDataToClient(socket, &fileData);
-				}
+//                const char sensor_receive_buffer = rx_buf;
+                QByteArray fileData(QByteArray::fromRawData(rx_buf, rx_size));
+                LastLogQstring = "fileData size is:" + QString::number(fileData.size());
+                ui->textBrowser_receivedMessages->append(LastLogQstring);
+                std::cout << LastLogQstring.toStdString() << std::endl;
+                sendDataToClient(socket, &fileData);
 				break;
 			}
 			else if (captureMode == "processed data")

@@ -74,7 +74,7 @@ private:
 	axidma_dev_t axidma_dev;
 	const array_t *tx_chans, *rx_chans;
     struct axidma_inout_transaction trans;
-    bool data_transmit_en;
+    XDma_lb_axis_switch loop_back_sw;
     QString LastLogQstring;
 };
 
