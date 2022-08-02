@@ -18,7 +18,48 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="2" column="0">
+    <item row="8" column="1">
+     <widget class="QPushButton" name="pushButton_sendData">
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>Start</string>
+      </property>
+      <property name="flat">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>log console:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QTextBrowser" name="textBrowser_receivedMessages">
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="1">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>Capture sensor data:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="9" column="1">
+     <widget class="QPushButton" name="pushButton_stopSendData">
+      <property name="text">
+       <string>Stop</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
      <widget class="QComboBox" name="comboBox_receiver">
       <property name="minimumSize">
        <size>
@@ -33,38 +74,25 @@
       </item>
      </widget>
     </item>
-    <item row="1" column="0">
-     <widget class="QTextBrowser" name="textBrowser_receivedMessages">
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="0">
-     <widget class="QPushButton" name="pushButton_sendData">
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
-      <property name="text">
-       <string>capture sensor data</string>
-      </property>
-      <property name="flat">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="label">
-      <property name="text">
-       <string>log console:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="0">
+    <item row="5" column="1">
      <widget class="QPushButton" name="pushButton_init_dma">
       <property name="text">
        <string>Initialize and test DMA</string>
       </property>
+     </widget>
+    </item>
+    <item row="7" column="1">
+     <widget class="QComboBox" name="comboBox_sensor">
+      <item>
+       <property name="text">
+        <string>raw data</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>processed data</string>
+       </property>
+      </item>
      </widget>
     </item>
    </layout>
