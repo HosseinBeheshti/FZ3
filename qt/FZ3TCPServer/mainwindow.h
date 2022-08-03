@@ -34,6 +34,8 @@
 #include "AXIDMA/axidma_benchmark.h"
 #include "AXIDMA/xdma_lb_axis_switch.h"
 
+#include <atomic>
+
 namespace Ui
 {
 	class MainWindow;
@@ -61,6 +63,7 @@ private slots:
     void sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr);
     void on_pushButton_stopSendData_clicked();
     void on_pushButton_sendData_clicked();
+    void sendDataAsync(QString receiver, QString captureMode);
 
 private:
 	Ui::MainWindow *ui;
@@ -76,7 +79,7 @@ private:
     struct axidma_inout_transaction trans;
     XDma_lb_axis_switch loop_back_sw;
     QString LastLogQstring;
-    int sensor_data_stream;
+    std::atomic_bool sensor_data_stream;
 };
 
 #endif // MAINWINDOW_H
