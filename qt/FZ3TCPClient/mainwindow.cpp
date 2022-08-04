@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 	connect(socket, &QTcpSocket::readyRead, this, &MainWindow::readSocket);
 	connect(socket, &QTcpSocket::disconnected, this, &MainWindow::discardSocket);
 
-	socket->connectToHost("10.1.1.11", 1992);
+    socket->connectToHost("10.1.1.11", 1992);
 
 	if (socket->waitForConnected())
 		ui->statusBar->showMessage("Connected to Server");
@@ -33,21 +33,20 @@ MainWindow::~MainWindow()
 void MainWindow::readSocket()
 {
 	socket_buffer.append(socket->readAll());
+    if ((socket_buffer.size() >= 500*1000*1000) || (socket_buffer.left(16) == "A5A5A5A5A5A5A5A5"))
+    {
 
-    if (socket_buffer.size() >= 500*1000*1000)
-	{
-
-		QString file_time = QTime::currentTime().toString("hh:mm:ss");
+        QString file_time = QTime::currentTime().toString("hh:mm:ss");
         QString filePath = "/fz3_data/sensor_data_" + file_time + ".bin";
-		QFile file(filePath);
-		if (file.open(QIODevice::WriteOnly))
-		{
-			file.write(socket_buffer);
-			QString message = QString("INFO :: Attachment from sd:%1 successfully stored on disk under the path %2").arg(socket->socketDescriptor()).arg(QString(filePath));
-			emit newMessage(message);
-			socket_buffer.remove(1, socket_buffer.size());
-		}
-	}
+        QFile file(filePath);
+        if (file.open(QIODevice::WriteOnly))
+        {
+            file.write(socket_buffer);
+            QString message = QString("INFO :: Attachment from sd:%1 successfully stored on disk under the path %2").arg(socket->socketDescriptor()).arg(QString(filePath));
+            emit newMessage(message);
+            socket_buffer.remove(1, socket_buffer.size());
+        }
+    }
 }
 
 void MainWindow::discardSocket()
