@@ -172,7 +172,7 @@ module sensor_data_acquisition
         y_value <= sensor_data_reg[3]*sensor_data_reg[3];
         c_acc <= c_acc + y_value;
         d_acc <= d_acc + y_value*sensor_data_index_reg[3];
-		// debug data link
+        // debug data link
         //processed_data <= {d_acc, c_acc};
         processed_data <= {32'hDDDDDDDD,32'hCCCCCCCC,32'hBBBBBBB};
         if (sensor_data_index_reg[3] < 1023)
@@ -190,13 +190,22 @@ module sensor_data_acquisition
         if (data_counter < 3)
         begin
           data_counter <= data_counter + 1;
-          data_tdata <= processed_data[(data_counter+1)*32-1:data_counter*32];
           data_tvalid <= 1;
         end
         else
         begin
           axis_state <= FOOTER;
         end
+        case (data_counter)
+          0:
+            data_tdata <= processed_data[(0+1)*32-1:0*32];
+          1:
+            data_tdata <= processed_data[(1+1)*32-1:1*32];
+          2:
+            data_tdata <= processed_data[(2+1)*32-1:2*32];
+          default:
+            data_tdata <= 32'hEEEEEEEE;
+        endcase
       end
 
       RAW_DATA:
