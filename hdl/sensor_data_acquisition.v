@@ -23,6 +23,7 @@ module sensor_data_acquisition
     (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME master_clock, FREQ_HZ 40000000" *)
     input master_clock,
     input resetn,
+    input send_raw_data,
     // sensor interface
     output s15611_mclk,
     output s15611_mst,
@@ -59,8 +60,14 @@ module sensor_data_acquisition
   reg [31:0] time_counter;
   localparam [31:0] HEADER_VALUE = 32'hAAAAAAAA;
   localparam [31:0] FOOTER_VALUE = 32'h55555555;
-  localparam [3:0]  IDLE = 0, HEADER = 1, TIME_STAMP = 2, DATA = 3, FOOTER = 4;
+  localparam [3:0]  IDLE = 0, HEADER = 1, TIME_STAMP = 2, DATA_ACQ1 = 3, DATA_ACQ2 = 4, RAW_DATA = 5, FOOTER = 6;
   reg [3:0] axis_state = IDLE;
+  reg [31:0] raw_data_data;
+  reg [95:0] processed_data;
+  reg [7:0] data_counter;
+  reg [24:0] y_value;
+  reg [47:0] c_acc;
+  reg [47:0] d_acc;
 
   s15611_driver s15611_driver_inst
                 (
@@ -83,9 +90,9 @@ module sensor_data_acquisition
                   .data_valid(sensor_data_valid),
                   // debug port
                   .dbg_state(dbg_sensor_state),
-				  .dbg_sensor_raw_data(dbg_sensor_raw_data),
+                  .dbg_sensor_raw_data(dbg_sensor_raw_data),
                   .dbg_sensor_data(dbg_sensor_data),
-				  .dbg_sensor_index(dbg_sensor_index),
+                  .dbg_sensor_index(dbg_sensor_index),
                   .dbg_sensor_valid(dbg_sensor_valid)
                 );
 
@@ -123,6 +130,9 @@ module sensor_data_acquisition
     data_tdata <= 0;
     data_tvalid <= 0;
     data_tlast <= 0;
+    y_value <= 0;
+    c_acc <= 0;
+    d_acc <= 0;
     case (axis_state)
       IDLE:
       begin
@@ -147,14 +157,53 @@ module sensor_data_acquisition
       begin
         data_tdata <= time_counter;
         data_tvalid <= 1;
-        axis_state <= DATA;
+        if (send_raw_data)
+        begin
+          axis_state <= RAW_DATA;
+        end
+        else
+        begin
+          axis_state <= DATA_ACQ1;
+        end
       end
 
-      DATA:
+      DATA_ACQ1:
+      begin
+        y_value <= sensor_data_reg[3]*sensor_data_reg[3];
+        c_acc <= c_acc + y_value;
+        d_acc <= d_acc + y_value*sensor_data_index_reg[3];
+		// debug data link
+        //processed_data <= {d_acc, c_acc};
+        processed_data <= {32'hDDDDDDDD,32'hCCCCCCCC,32'hBBBBBBB};
+        if (sensor_data_index_reg[3] < 1023)
+        begin
+          axis_state <= DATA_ACQ1;
+        end
+        else if (sensor_data_index_reg[3] == 1023)
+        begin
+          axis_state <= DATA_ACQ2;
+        end
+      end
+
+      DATA_ACQ2:
+      begin
+        if (data_counter < 3)
+        begin
+          data_counter <= data_counter + 1;
+          data_tdata <= processed_data[(data_counter+1)*32-1:data_counter*32];
+          data_tvalid <= 1;
+        end
+        else
+        begin
+          axis_state <= FOOTER;
+        end
+      end
+
+      RAW_DATA:
       begin
         if (sensor_data_index_reg[3] < 1023)
         begin
-          axis_state <= DATA;
+          axis_state <= RAW_DATA;
           data_tdata <= {10'd0, sensor_data_index_reg[3], sensor_data_reg[3]};
           data_tvalid <= 1;
         end
