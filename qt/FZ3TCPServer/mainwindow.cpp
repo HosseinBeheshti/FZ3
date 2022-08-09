@@ -29,7 +29,7 @@ MainWindow::~MainWindow()
 	{
 		socket->close();
 		socket->deleteLater();
-        socket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption, 1*1024*1024);
+        socket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption, 50*1024*1024);
 	}
 
 	m_server->close();
@@ -101,8 +101,8 @@ void MainWindow::init_dma()
 {
 	tx_channel = 0;
 	rx_channel = 1;
-    tx_size = MIB_TO_BYTE(1);
-    rx_size = MIB_TO_BYTE(1);
+	tx_size = MIB_TO_BYTE(50);
+	rx_size = MIB_TO_BYTE(50);
 	LastLogQstring = "AXI DMA Parameters:";
 	ui->textBrowser_receivedMessages->append(LastLogQstring);
 	std::cout << LastLogQstring.toStdString() << std::endl;
@@ -254,11 +254,12 @@ void MainWindow::init_dma()
 	LastLogQstring = "AXI DMA sw loopback disabled";
 	ui->textBrowser_receivedMessages->append(LastLogQstring);
 	std::cout << LastLogQstring.toStdString() << std::endl;
+	ui->pushButton_init_dma->setEnabled(false);
 	LastLogQstring = "DMA test DONE";
 	ui->textBrowser_receivedMessages->append(LastLogQstring);
 	std::cout << LastLogQstring.toStdString() << std::endl;
+
 	QString receiver = "DMA initialize DONE";
-    ui->pushButton_init_dma->setEnabled(false);
 }
 
 void MainWindow::on_pushButton_init_dma_clicked()
