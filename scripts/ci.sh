@@ -7,3 +7,4 @@ $ORG_DIR/scripts/create_vivado_project.sh
 $ORG_DIR/scripts/build_vivado_project.sh
 $ORG_DIR/scripts/create_petalinux_project.sh
 $ORG_DIR/scripts/build_petalinux_project.sh
+$ORG_DIR/petalinux/xilinx_axidma/add_module_and_apps.sh
