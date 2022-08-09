@@ -37,7 +37,7 @@ module sensor_data_acquisition
     // axis_data
     (* X_INTERFACE_PARAMETER = "ASSOCIATED_BUSIF data,  FREQ_HZ 40000000" *)
     input data_tready,
-    output reg [31:0] data_tdata,
+    output reg [15:0] data_tdata,
     output reg data_tlast,
     output reg data_tvalid,
     // debug port
@@ -57,8 +57,8 @@ module sensor_data_acquisition
   reg [9:0] sensor_data_index_reg[5:0];
   reg sensor_data_valid_reg[5:0];
   reg [31:0] time_counter;
-  localparam [31:0] HEADER_VALUE = 32'hAAAAAAAA;
-  localparam [31:0] FOOTER_VALUE = 32'h55555555;
+  localparam [15:0] HEADER_VALUE = 16'hAAAAAAAA;
+  localparam [15:0] FOOTER_VALUE = 16'h55555555;
   localparam [3:0]  IDLE = 0, HEADER = 1, TIME_STAMP = 2, DATA = 3, FOOTER = 4;
   reg [3:0] axis_state = IDLE;
 
@@ -156,14 +156,14 @@ module sensor_data_acquisition
         begin
           axis_state <= DATA;
           //data_tdata <= {10'd0, sensor_data_index_reg[3], sensor_data_reg[3]};
-          data_tdata <= {22'd0, sensor_data_index_reg[3]};
+          data_tdata <= {6'd0, sensor_data_index_reg[3]};
           data_tvalid <= 1;
         end
         else if (sensor_data_index_reg[3] == 1023)
         begin
           axis_state <= FOOTER;
           //data_tdata <= {10'd0, sensor_data_index_reg[3], sensor_data_reg[3]};
-          data_tdata <= {22'd0, sensor_data_index_reg[3]};
+          data_tdata <= {6'd0, sensor_data_index_reg[3]};
           data_tvalid <= 1;
         end
       end
