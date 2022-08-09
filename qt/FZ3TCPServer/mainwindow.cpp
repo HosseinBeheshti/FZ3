@@ -29,7 +29,7 @@ MainWindow::~MainWindow()
 	{
 		socket->close();
 		socket->deleteLater();
-        socket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption, 50*1024*1024);
+		socket->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption, 64 * 1024 * 1024);
 	}
 
 	m_server->close();
@@ -278,6 +278,10 @@ void MainWindow::sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr)
 			uint64_t bytes;
 			QByteArray data = *fileDataPtr;
 			bytes = socket->write(data);
+			while (socket->waitForBytesWritten())
+			{
+				usleep(10);
+			}
 		}
 		else
 			QMessageBox::critical(this, "QTCPServer", "Socket doesn't seem to be opened");
