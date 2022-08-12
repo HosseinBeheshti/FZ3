@@ -63,7 +63,7 @@ private slots:
     void sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr);
     void on_pushButton_stopSendData_clicked();
     void on_pushButton_sendData_clicked();
-    void sendDataAsync(QString receiver, QString captureMode);
+    void sendDataAsync(QString receiver);
 
 private:
 	Ui::MainWindow *ui;

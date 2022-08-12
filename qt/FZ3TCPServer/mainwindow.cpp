@@ -290,7 +290,7 @@ void MainWindow::sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr)
 		QMessageBox::critical(this, "QTCPServer", "Not connected");
 }
 
-void MainWindow::sendDataAsync(QString receiver, QString captureMode)
+void MainWindow::sendDataAsync(QString receiver)
 {
 
 	foreach (QTcpSocket *socket, connection_set)
@@ -308,14 +308,8 @@ void MainWindow::sendDataAsync(QString receiver, QString captureMode)
 					ui->textBrowser_receivedMessages->append(LastLogQstring);
 					std::cout << LastLogQstring.toStdString() << std::endl;
 				}
-				if (captureMode == "raw data")
-				{
 					QByteArray fileData(QByteArray::fromRawData(rx_buf, rx_size));
 					sendDataToClient(socket, &fileData);
-				}
-				else if (captureMode == "processed data")
-				{
-				}
 			}
 			QString tmpFooter = "A5A5A5A5A5A5A5A5";
 			QByteArray footer = tmpFooter.toLocal8Bit();
@@ -331,12 +325,11 @@ void MainWindow::sendDataAsync(QString receiver, QString captureMode)
 void MainWindow::on_pushButton_sendData_clicked()
 {
 	QString receiver = ui->comboBox_receiver->currentText();
-	QString captureMode = ui->comboBox_sensor->currentText();
 	ui->pushButton_sendData->setEnabled(false);
 	ui->pushButton_stopSendData->setEnabled(true);
 	sensor_data_stream = true;
 
-	std::thread sendthread(&MainWindow::sendDataAsync, this, receiver, captureMode);
+    std::thread sendthread(&MainWindow::sendDataAsync, this, receiver);
 	sendthread.detach();
 }
 void MainWindow::on_pushButton_stopSendData_clicked()
