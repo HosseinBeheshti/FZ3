@@ -132,6 +132,7 @@ module sensor_data_acquisition
     y_value <= 0;
     c_acc <= 0;
     d_acc <= 0;
+    data_counter <= 0;
     case (axis_state)
       IDLE:
       begin
