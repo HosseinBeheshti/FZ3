@@ -59,9 +59,14 @@ module sensor_data_acquisition
   reg [31:0] time_counter;
   localparam [31:0] HEADER_VALUE = 32'hAAAAAAAA;
   localparam [31:0] FOOTER_VALUE = 32'h55555555;
-  localparam [3:0]  IDLE = 0, HEADER = 1, TIME_STAMP = 2, DATA = 3, FOOTER = 4;
+  localparam [3:0]  IDLE = 0, HEADER = 1, TIME_STAMP = 2, DATA_ACQ1 = 3, DATA_ACQ2 = 4, RAW_DATA = 5, FOOTER = 6;
   reg [3:0] axis_state = IDLE;
-  reg [31:0] data_tdata_temp;
+  reg [31:0] raw_data_data;
+  reg [95:0] processed_data;
+  reg [7:0] data_counter;
+  reg [24:0] y_value;
+  reg [47:0] c_acc;
+  reg [47:0] d_acc;
 
   s15611_driver s15611_driver_inst
                 (
@@ -124,6 +129,9 @@ module sensor_data_acquisition
     data_tdata <= 0;
     data_tvalid <= 0;
     data_tlast <= 0;
+    y_value <= 0;
+    c_acc <= 0;
+    d_acc <= 0;
     case (axis_state)
       IDLE:
       begin
@@ -148,29 +156,48 @@ module sensor_data_acquisition
       begin
         data_tdata <= time_counter;
         data_tvalid <= 1;
-        axis_state <= DATA;
+        axis_state <= DATA_ACQ1;
       end
 
-      DATA:
+      DATA_ACQ1:
       begin
+        y_value <= sensor_data_reg[3]*sensor_data_reg[3];
+        c_acc <= c_acc + y_value;
+        d_acc <= d_acc + y_value*sensor_data_index_reg[3];
+        // debug data link
+        //processed_data <= {d_acc, c_acc};
+        processed_data <= {32'hDDDDDDDD,32'hCCCCCCCC,32'hBBBBBBB};
         if (sensor_data_index_reg[3] < 1023)
         begin
-          axis_state <= DATA;
+          axis_state <= DATA_ACQ1;
         end
         else if (sensor_data_index_reg[3] == 1023)
         begin
-          axis_state <= FOOTER;
+          axis_state <= DATA_ACQ2;
         end
-        if (sensor_data_index_reg[3][0])
+      end
+
+      DATA_ACQ2:
+      begin
+        if (data_counter < 3)
         begin
-//          data_tdata <= {4'd0, sensor_data_reg[4],4'd0, sensor_data_reg[3]};
-          data_tdata <= {22'd0, sensor_data_index_reg[3]};
+          data_counter <= data_counter + 1;
           data_tvalid <= 1;
         end
         else
         begin
-          data_tvalid <= 0;
+          axis_state <= FOOTER;
         end
+        case (data_counter)
+          0:
+            data_tdata <= processed_data[(0+1)*32-1:0*32];
+          1:
+            data_tdata <= processed_data[(1+1)*32-1:1*32];
+          2:
+            data_tdata <= processed_data[(2+1)*32-1:2*32];
+          default:
+            data_tdata <= 32'hEEEEEEEE;
+        endcase
       end
 
       FOOTER:
