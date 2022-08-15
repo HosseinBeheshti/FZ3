@@ -23,6 +23,8 @@ module sensor_data_acquisition
     (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME master_clock, FREQ_HZ 40000000" *)
     input master_clock,
     input resetn,
+    input send_raw_data,
+    input [15:0] number_of_packet,
     // sensor interface
     output s15611_mclk,
     output s15611_mst,
@@ -64,6 +66,7 @@ module sensor_data_acquisition
   reg [31:0] raw_data_data;
   reg [95:0] processed_data;
   reg [7:0] data_counter;
+  reg [15:0] packet_counter;
   reg [24:0] y_value;
   reg [47:0] c_acc;
   reg [47:0] d_acc;
@@ -133,6 +136,7 @@ module sensor_data_acquisition
     c_acc <= 0;
     d_acc <= 0;
     data_counter <= 0;
+    packet_counter <= 0;
     case (axis_state)
       IDLE:
       begin
@@ -157,7 +161,14 @@ module sensor_data_acquisition
       begin
         data_tdata <= time_counter;
         data_tvalid <= 1;
-        axis_state <= DATA_ACQ1;
+        if (send_raw_data)
+        begin
+          axis_state <= RAW_DATA;
+        end
+        else
+        begin
+          axis_state <= DATA_ACQ1;
+        end
       end
 
       DATA_ACQ1:
@@ -166,8 +177,7 @@ module sensor_data_acquisition
         c_acc <= c_acc + y_value;
         d_acc <= d_acc + y_value*sensor_data_index_reg[3];
         // debug data link
-        //processed_data <= {d_acc, c_acc};
-        processed_data <= {32'hDDDDDDDD,32'hCCCCCCCC,32'hBBBBBBB};
+        processed_data <= {d_acc, c_acc};
         if (sensor_data_index_reg[3] < 1023)
         begin
           axis_state <= DATA_ACQ1;
@@ -201,11 +211,41 @@ module sensor_data_acquisition
         endcase
       end
 
+      RAW_DATA:
+      begin
+        if (sensor_data_index_reg[3] < 1023)
+        begin
+          axis_state <= DATA;
+        end
+        else if (sensor_data_index_reg[3] == 1023)
+        begin
+          axis_state <= FOOTER;
+        end
+        if (sensor_data_index_reg[3][0])
+        begin
+          //          data_tdata <= {4'd0, sensor_data_reg[4],4'd0, sensor_data_reg[3]};
+          data_tdata <= {22'd0, sensor_data_index_reg[3]};
+          data_tvalid <= 1;
+        end
+        else
+        begin
+          data_tvalid <= 0;
+        end
+      end
+
+
       FOOTER:
       begin
         data_tdata <= FOOTER_VALUE;
         data_tvalid <= 1;
-        data_tlast <= 1;
+        if (packet_counter < number_of_packet)
+        begin
+          packet_counter <= packet_counter + 1;
+        end
+        else
+        begin
+          data_tlast <= 1;
+        end
         axis_state <= IDLE;
       end
     endcase
