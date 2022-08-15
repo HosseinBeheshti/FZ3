@@ -215,7 +215,7 @@ module sensor_data_acquisition
       begin
         if (sensor_data_index_reg[3] < 1023)
         begin
-          axis_state <= DATA;
+          axis_state <= RAW_DATA;
         end
         else if (sensor_data_index_reg[3] == 1023)
         begin
