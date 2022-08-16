@@ -61,7 +61,8 @@ module sensor_data_acquisition
   reg [31:0] time_counter;
   localparam [31:0] HEADER_VALUE = 32'hAAAAAAAA;
   localparam [31:0] FOOTER_VALUE = 32'h55555555;
-  localparam [3:0]  IDLE = 0, HEADER = 1, TIME_STAMP = 2, DATA_ACQ1 = 3, DATA_ACQ2 = 4, RAW_DATA = 5, FOOTER = 6;
+  localparam [31:0] TLAST_VALUE = 32'hBBBBBBBB;
+  localparam [3:0]  IDLE = 0, HEADER = 1, TIME_STAMP = 2, DATA_ACQ1 = 3, DATA_ACQ2 = 4, RAW_DATA = 5, FOOTER = 6, TLAST_ASSERT = 7;
   reg [3:0] axis_state = IDLE;
   reg [31:0] raw_data_data;
   reg [95:0] processed_data;
@@ -136,7 +137,6 @@ module sensor_data_acquisition
     c_acc <= 0;
     d_acc <= 0;
     data_counter <= 0;
-    packet_counter <= 0;
     case (axis_state)
       IDLE:
       begin
@@ -233,7 +233,6 @@ module sensor_data_acquisition
         end
       end
 
-
       FOOTER:
       begin
         data_tdata <= FOOTER_VALUE;
@@ -241,11 +240,20 @@ module sensor_data_acquisition
         if (packet_counter < number_of_packet)
         begin
           packet_counter <= packet_counter + 1;
+          axis_state <= IDLE;
         end
         else
         begin
-          data_tlast <= 1;
+          packet_counter <= 0;
+          axis_state <= TLAST_ASSERT;
         end
+      end
+
+      TLAST_ASSERT:
+      begin
+        data_tdata <= TLAST_VALUE;
+        data_tvalid <= 1;
+        data_tlast <= 1;
         axis_state <= IDLE;
       end
     endcase
