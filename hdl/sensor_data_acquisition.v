@@ -194,6 +194,7 @@ module sensor_data_acquisition
         begin
           data_counter <= data_counter + 1;
           data_tvalid <= 1;
+          axis_state <= DATA_ACQ2;
         end
         else
         begin
