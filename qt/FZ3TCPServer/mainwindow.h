@@ -35,6 +35,9 @@
 #include "AXIDMA/xdma_lb_axis_switch.h"
 
 #include <atomic>
+#include <thread>
+
+#define PACKET_SIZE (515*4*1024)
 
 namespace Ui
 {
@@ -64,6 +67,7 @@ private slots:
     void on_pushButton_stopSendData_clicked();
     void on_pushButton_sendData_clicked();
     void sendDataAsync(QString receiver);
+    void getSensorData(bool dma_init_done);
 
 private:
 	Ui::MainWindow *ui;
@@ -78,8 +82,11 @@ private:
 	const array_t *tx_chans, *rx_chans;
     struct axidma_inout_transaction trans;
     XDma_lb_axis_switch loop_back_sw;
+	bool dma_init_done;
     QString LastLogQstring;
+	QByteArray fileData;
     std::atomic_bool sensor_data_stream;
+    std::atomic_bool sensor_data_available;
 };
 
 #endif // MAINWINDOW_H

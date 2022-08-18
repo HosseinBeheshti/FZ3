@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <thread>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), sensor_data_stream(false)
 {
@@ -101,8 +100,8 @@ void MainWindow::init_dma()
 {
 	tx_channel = 0;
 	rx_channel = 1;
-	tx_size = MIB_TO_BYTE(50);
-	rx_size = MIB_TO_BYTE(50);
+	tx_size = MIB_TO_BYTE(100);
+	rx_size = MIB_TO_BYTE(100);
 	LastLogQstring = "AXI DMA Parameters:";
 	ui->textBrowser_receivedMessages->append(LastLogQstring);
 	std::cout << LastLogQstring.toStdString() << std::endl;
@@ -129,10 +128,6 @@ void MainWindow::init_dma()
 		ui->textBrowser_receivedMessages->append(LastLogQstring);
 		std::cout << LastLogQstring.toStdString() << std::endl;
 	}
-	XDma_lb_axis_switch_Set_dma_loopback_en(&loop_back_sw, 1);
-	LastLogQstring = "AXI DMA sw loopback enabled";
-	ui->textBrowser_receivedMessages->append(LastLogQstring);
-	std::cout << LastLogQstring.toStdString() << std::endl;
 
 	// Initialize the AXI DMA device
 	axidma_dev = axidma_init();
@@ -201,65 +196,12 @@ void MainWindow::init_dma()
 	ui->textBrowser_receivedMessages->append(LastLogQstring);
 	std::cout << LastLogQstring.toStdString() << std::endl;
 
-	size_t i;
-	int *transmit_buffer, *receive_buffer;
-
-	transmit_buffer = (int *)tx_buf;
-	receive_buffer = (int *)rx_buf;
-
-	// Fill the buffer with integer patterns
-	for (i = 0; i < tx_size / sizeof(int); i++)
-	{
-		transmit_buffer[i] = TEST_PATTERN(i);
-	}
-
-	// Fill in any leftover bytes if it's not aligned
-	for (i = 0; i < tx_size % sizeof(int); i++)
-	{
-		tx_buf[i] = TEST_PATTERN(i + tx_size / sizeof(int));
-	}
-
-	// Fill the buffer with integer patterns
-	for (i = 0; i < rx_size / sizeof(int); i++)
-	{
-		receive_buffer[i] = TEST_PATTERN(i + tx_size);
-	}
-
-	// Fill in any leftover bytes if it's not aligned
-	for (i = 0; i < rx_size % sizeof(int); i++)
-	{
-		rx_buf[i] = TEST_PATTERN(i + tx_size + rx_size / sizeof(int));
-	}
-
-	// Perform the DMA transaction
-	rc = axidma_twoway_transfer(axidma_dev, tx_channel, tx_buf, tx_size, NULL,
-								rx_channel, rx_buf, rx_size, NULL, true);
-	if (rc < 0)
-	{
-		LastLogQstring = "Failed to perform the AXI DMA read-write transfer";
-		ui->textBrowser_receivedMessages->append(LastLogQstring);
-		std::cout << LastLogQstring.toStdString() << std::endl;
-	}
-	else
-	{
-		LastLogQstring = "Single transfer test successfully completed!";
-		ui->textBrowser_receivedMessages->append(LastLogQstring);
-		std::cout << LastLogQstring.toStdString() << std::endl;
-	}
-
-	// Verify that the data in the buffer changed
-	// TODO
-
-	XDma_lb_axis_switch_Set_dma_loopback_en(&loop_back_sw, 0);
-	LastLogQstring = "AXI DMA sw loopback disabled";
-	ui->textBrowser_receivedMessages->append(LastLogQstring);
-	std::cout << LastLogQstring.toStdString() << std::endl;
-	ui->pushButton_init_dma->setEnabled(false);
-	LastLogQstring = "DMA test DONE";
-	ui->textBrowser_receivedMessages->append(LastLogQstring);
-	std::cout << LastLogQstring.toStdString() << std::endl;
-
+	dma_init_done = true;
+	sensor_data_available = false;
 	QString receiver = "DMA initialize DONE";
+	ui->pushButton_init_dma->setEnabled(false);
+	std::thread sendthread(&MainWindow::getSensorData, this, dma_init_done);
+	sendthread.detach();
 }
 
 void MainWindow::on_pushButton_init_dma_clicked()
@@ -290,6 +232,24 @@ void MainWindow::sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr)
 		QMessageBox::critical(this, "QTCPServer", "Not connected");
 }
 
+void MainWindow::on_pushButton_sendData_clicked()
+{
+	QString receiver = ui->comboBox_receiver->currentText();
+	ui->pushButton_sendData->setEnabled(false);
+	ui->pushButton_stopSendData->setEnabled(true);
+	sensor_data_stream = true;
+
+	std::thread sendthread(&MainWindow::sendDataAsync, this, receiver);
+	sendthread.detach();
+}
+
+void MainWindow::on_pushButton_stopSendData_clicked()
+{
+	sensor_data_stream = false;
+	ui->pushButton_sendData->setEnabled(true);
+	ui->pushButton_stopSendData->setEnabled(false);
+}
+
 void MainWindow::sendDataAsync(QString receiver)
 {
 
@@ -297,19 +257,19 @@ void MainWindow::sendDataAsync(QString receiver)
 	{
 		if (socket->socketDescriptor() == receiver.toLongLong())
 		{
-			while (sensor_data_stream == true)
+			std::cout << "send data  async function" << std::endl;
+			while (sensor_data_stream)
 			{
-				/* This performs a one-way transfer over AXI DMA, the direction being specified
-				 * by the user. The user determines if this is blocking or not with `wait. */
-				rc = axidma_oneway_transfer(axidma_dev, rx_channel, rx_buf, rx_size, true);
-				if (rc < 0)
+				if (sensor_data_available)
 				{
-					LastLogQstring = "Failed to perform the AXI DMA read transfer";
-					ui->textBrowser_receivedMessages->append(LastLogQstring);
-					std::cout << LastLogQstring.toStdString() << std::endl;
-				}
-					QByteArray fileData(QByteArray::fromRawData(rx_buf, rx_size));
 					sendDataToClient(socket, &fileData);
+					fileData.resize(1);
+					sensor_data_available = false;
+				}
+				else
+				{
+					usleep(10);
+				}
 			}
 			QString tmpFooter = "A5A5A5A5A5A5A5A5";
 			QByteArray footer = tmpFooter.toLocal8Bit();
@@ -322,19 +282,36 @@ void MainWindow::sendDataAsync(QString receiver)
 	}
 }
 
-void MainWindow::on_pushButton_sendData_clicked()
+void MainWindow::getSensorData(bool dma_init_done)
 {
-	QString receiver = ui->comboBox_receiver->currentText();
-	ui->pushButton_sendData->setEnabled(false);
-	ui->pushButton_stopSendData->setEnabled(true);
-	sensor_data_stream = true;
+	QByteArray fileData_temp;
+	while (dma_init_done)
+	{
+		if (!sensor_data_available)
+		{
+			/* This performs a one-way transfer over AXI DMA, the direction being specified
+			 * by the user. The user determines if this is blocking or not with `wait. */
+			rc = axidma_oneway_transfer(axidma_dev, rx_channel, rx_buf, rx_size, true);
+			if (rc < 0)
+			{
+				LastLogQstring = "Failed to perform the AXI DMA read transfer";
+				ui->textBrowser_receivedMessages->append(LastLogQstring);
+				std::cout << LastLogQstring.toStdString() << std::endl;
+			}
+			QByteArray fileData_temp(QByteArray::fromRawData(rx_buf, rx_size));
 
-    std::thread sendthread(&MainWindow::sendDataAsync, this, receiver);
-	sendthread.detach();
-}
-void MainWindow::on_pushButton_stopSendData_clicked()
-{
-	sensor_data_stream = false;
-	ui->pushButton_sendData->setEnabled(true);
-	ui->pushButton_stopSendData->setEnabled(false);
+			QByteArray header_value(QByteArray::fromHex("55555555"));
+			int first_header_index = fileData_temp.indexOf(header_value);
+
+			if (first_header_index > 10)
+			{
+				fileData.append(fileData_temp.mid(first_header_index - 10, PACKET_SIZE + 10));
+				sensor_data_available = true;
+			}
+		}
+		else
+		{
+			usleep(10);
+		}
+	}
 }
