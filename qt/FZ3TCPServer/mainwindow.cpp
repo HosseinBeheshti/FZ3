@@ -100,8 +100,8 @@ void MainWindow::init_dma()
 {
 	tx_channel = 0;
 	rx_channel = 1;
-	tx_size = MIB_TO_BYTE(100);
-	rx_size = MIB_TO_BYTE(100);
+	tx_size = MIB_TO_BYTE(10);
+	rx_size = MIB_TO_BYTE(10);
 	LastLogQstring = "AXI DMA Parameters:";
 	ui->textBrowser_receivedMessages->append(LastLogQstring);
 	std::cout << LastLogQstring.toStdString() << std::endl;
@@ -257,7 +257,6 @@ void MainWindow::sendDataAsync(QString receiver)
 	{
 		if (socket->socketDescriptor() == receiver.toLongLong())
 		{
-			std::cout << "send data  async function" << std::endl;
 			while (sensor_data_stream)
 			{
 				if (sensor_data_available)
@@ -316,9 +315,12 @@ void MainWindow::getSensorData(bool dma_init_done)
 
 		if (processedData.size() > PACKET_SIZE)
 		{
-			fileData.append(processedData);
 			processedData.remove(1, processedData.size());
-			sensor_data_available = true;
+			if (!sensor_data_available)
+			{
+				fileData.append(processedData);
+				sensor_data_available = true;
+			}
 		}
 	}
 }
