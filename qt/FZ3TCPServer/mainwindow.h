@@ -38,7 +38,7 @@
 #include <thread>
 
 #define FRAME_SIZE (515*4)
-#define PACKET_SIZE (2*1000*1000)
+#define PACKET_SIZE (2*1000)
 
 namespace Ui
 {

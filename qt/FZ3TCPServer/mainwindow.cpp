@@ -198,8 +198,12 @@ void MainWindow::init_dma()
 
 	dma_init_done = true;
 	sensor_data_available = false;
-	QString receiver = "DMA initialize DONE";
 	ui->pushButton_init_dma->setEnabled(false);
+
+	LastLogQstring = "DMA initialize DONE";
+	ui->textBrowser_receivedMessages->append(LastLogQstring);
+	std::cout << LastLogQstring.toStdString() << std::endl;
+
 	std::thread sendthread(&MainWindow::getSensorData, this, dma_init_done);
 	sendthread.detach();
 }
@@ -301,7 +305,7 @@ void MainWindow::getSensorData(bool dma_init_done)
 		QByteArray header_value(QByteArray::fromHex("AAAAAAAA"));
 		int header_index = dma_raw_data.indexOf(header_value);
 
-		while (header_index > 0)
+		while (header_index >= 0)
 		{
 			processedData.append(QByteArray::fromHex("AAAAAAAA"));		 // header
 			processedData.append(dma_raw_data.mid(header_index + 4, 4)); // time stamp
@@ -315,12 +319,12 @@ void MainWindow::getSensorData(bool dma_init_done)
 
 		if (processedData.size() > PACKET_SIZE)
 		{
-			processedData.remove(1, processedData.size());
 			if (!sensor_data_available)
 			{
 				fileData.append(processedData);
 				sensor_data_available = true;
 			}
+			processedData.remove(1, processedData.size());
 		}
 	}
 }
