@@ -33,7 +33,7 @@ MainWindow::~MainWindow()
 void MainWindow::readSocket()
 {
 	socket_buffer.append(socket->readAll());
-    if ((socket_buffer.size() >= 500*1000*1000) || (socket_buffer.left(16) == "A5A5A5A5A5A5A5A5"))
+    if ((socket_buffer.size() >= 100*1000*1000) || (socket_buffer.left(16) == "A5A5A5A5A5A5A5A5"))
     {
 
         QString file_time = QTime::currentTime().toString("hh:mm:ss");

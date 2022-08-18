@@ -37,7 +37,8 @@
 #include <atomic>
 #include <thread>
 
-#define PACKET_SIZE (515*4*1024)
+#define FRAME_SIZE (515*4)
+#define PACKET_SIZE (2*1000*1000)
 
 namespace Ui
 {
@@ -84,6 +85,7 @@ private:
     XDma_lb_axis_switch loop_back_sw;
 	bool dma_init_done;
     QString LastLogQstring;
+	QByteArray processedData;
 	QByteArray fileData;
     std::atomic_bool sensor_data_stream;
     std::atomic_bool sensor_data_available;

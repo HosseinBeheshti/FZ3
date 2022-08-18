@@ -284,34 +284,41 @@ void MainWindow::sendDataAsync(QString receiver)
 
 void MainWindow::getSensorData(bool dma_init_done)
 {
-	QByteArray fileData_temp;
+	QByteArray dma_raw_data;
+	int counter_data = 0;
 	while (dma_init_done)
 	{
-		if (!sensor_data_available)
+		/* This performs a one-way transfer over AXI DMA, the direction being specified
+		 * by the user. The user determines if this is blocking or not with `wait. */
+		rc = axidma_oneway_transfer(axidma_dev, rx_channel, rx_buf, rx_size, true);
+		if (rc < 0)
 		{
-			/* This performs a one-way transfer over AXI DMA, the direction being specified
-			 * by the user. The user determines if this is blocking or not with `wait. */
-			rc = axidma_oneway_transfer(axidma_dev, rx_channel, rx_buf, rx_size, true);
-			if (rc < 0)
-			{
-				LastLogQstring = "Failed to perform the AXI DMA read transfer";
-				ui->textBrowser_receivedMessages->append(LastLogQstring);
-				std::cout << LastLogQstring.toStdString() << std::endl;
-			}
-			QByteArray fileData_temp(QByteArray::fromRawData(rx_buf, rx_size));
-
-			QByteArray header_value(QByteArray::fromHex("55555555"));
-			int first_header_index = fileData_temp.indexOf(header_value);
-
-			if (first_header_index > 10)
-			{
-				fileData.append(fileData_temp.mid(first_header_index - 10, PACKET_SIZE + 10));
-				sensor_data_available = true;
-			}
+			LastLogQstring = "Failed to perform the AXI DMA read transfer";
+			ui->textBrowser_receivedMessages->append(LastLogQstring);
+			std::cout << LastLogQstring.toStdString() << std::endl;
 		}
-		else
+		QByteArray dma_raw_data(QByteArray::fromRawData(rx_buf, rx_size));
+
+		QByteArray header_value(QByteArray::fromHex("AAAAAAAA"));
+		int header_index = dma_raw_data.indexOf(header_value);
+
+		while (header_index > 0)
 		{
-			usleep(10);
+			processedData.append(QByteArray::fromHex("AAAAAAAA"));		 // header
+			processedData.append(dma_raw_data.mid(header_index + 4, 4)); // time stamp
+			processedData.append(counter_data);							 // todo data1
+			processedData.append(counter_data + 1);						 // todo data2
+			processedData.append(QByteArray::fromHex("55555555"));		 // footer
+			dma_raw_data.remove(header_index, header_index + FRAME_SIZE);
+			header_index = dma_raw_data.indexOf(header_value);
+			counter_data = counter_data + 2;
+		}
+
+		if (processedData.size() > PACKET_SIZE)
+		{
+			fileData.append(processedData);
+			processedData.remove(1, processedData.size());
+			sensor_data_available = true;
 		}
 	}
 }
