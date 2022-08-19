@@ -224,8 +224,7 @@ module sensor_data_acquisition
         end
         if (sensor_data_index_reg[3][0])
         begin
-          //          data_tdata <= {4'd0, sensor_data_reg[4],4'd0, sensor_data_reg[3]};
-          data_tdata <= {22'd0, sensor_data_index_reg[3]};
+          data_tdata <= {4'd0, sensor_data_reg[4],4'd0, sensor_data_reg[3]};
           data_tvalid <= 1;
         end
         else
