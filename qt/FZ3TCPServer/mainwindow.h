@@ -37,8 +37,7 @@
 #include <atomic>
 #include <thread>
 
-#define FRAME_SIZE (515*4)
-#define PACKET_SIZE (2*1000)
+#define BUFFER_SIZE 1
 
 namespace Ui
 {
@@ -64,11 +63,11 @@ private slots:
 	void refreshComboBox();
 	void init_dma();
 	void on_pushButton_init_dma_clicked();
-    void sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr);
-    void on_pushButton_stopSendData_clicked();
-    void on_pushButton_sendData_clicked();
-    void sendDataAsync(QString receiver);
-    void getSensorData(bool dma_init_done);
+	void sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr);
+	void on_pushButton_stopSendData_clicked();
+	void on_pushButton_sendData_clicked();
+	void sendDataAsync(QString receiver);
+	void getSensorData(bool dma_init_done);
 
 private:
 	Ui::MainWindow *ui;
@@ -81,14 +80,14 @@ private:
 	char *tx_buf, *rx_buf;
 	axidma_dev_t axidma_dev;
 	const array_t *tx_chans, *rx_chans;
-    struct axidma_inout_transaction trans;
-    XDma_lb_axis_switch loop_back_sw;
+	struct axidma_inout_transaction trans;
+	XDma_lb_axis_switch loop_back_sw;
 	bool dma_init_done;
-    QString LastLogQstring;
+	QString LastLogQstring;
 	QByteArray processedData;
 	QByteArray fileData;
-    std::atomic_bool sensor_data_stream;
-    std::atomic_bool sensor_data_available;
+	std::atomic_bool sensor_data_stream;
+	std::atomic_bool sensor_data_available;
 };
 
 #endif // MAINWINDOW_H

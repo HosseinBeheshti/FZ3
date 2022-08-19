@@ -449,8 +449,7 @@ proc create_hier_cell_sensor_ss { parentCell nameHier } {
    CONFIG.C_EN_PROBE_IN_ACTIVITY {0} \
    CONFIG.C_NUM_PROBE_IN {0} \
    CONFIG.C_NUM_PROBE_OUT {2} \
-   CONFIG.C_PROBE_OUT0_INIT_VAL {0x1} \
-   CONFIG.C_PROBE_OUT1_INIT_VAL {0x0400} \
+   CONFIG.C_PROBE_OUT1_INIT_VAL {0x84D0} \
    CONFIG.C_PROBE_OUT1_WIDTH {16} \
  ] $sensor_vio
 

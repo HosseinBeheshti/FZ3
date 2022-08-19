@@ -100,8 +100,8 @@ void MainWindow::init_dma()
 {
 	tx_channel = 0;
 	rx_channel = 1;
-	tx_size = MIB_TO_BYTE(10);
-	rx_size = MIB_TO_BYTE(10);
+	tx_size = MIB_TO_BYTE(BUFFER_SIZE);
+	rx_size = MIB_TO_BYTE(BUFFER_SIZE);
 	LastLogQstring = "AXI DMA Parameters:";
 	ui->textBrowser_receivedMessages->append(LastLogQstring);
 	std::cout << LastLogQstring.toStdString() << std::endl;
@@ -302,29 +302,11 @@ void MainWindow::getSensorData(bool dma_init_done)
 		}
 		QByteArray dma_raw_data(QByteArray::fromRawData(rx_buf, rx_size));
 
-		QByteArray header_value(QByteArray::fromHex("AAAAAAAA"));
-		int header_index = dma_raw_data.indexOf(header_value);
-
-		while (header_index >= 0)
+		if (!sensor_data_available)
 		{
-			processedData.append(QByteArray::fromHex("AAAAAAAA"));		 // header
-			processedData.append(dma_raw_data.mid(header_index + 4, 4)); // time stamp
-			processedData.append(counter_data);							 // todo data1
-			processedData.append(counter_data + 1);						 // todo data2
-			processedData.append(QByteArray::fromHex("55555555"));		 // footer
-			dma_raw_data.remove(header_index, header_index + FRAME_SIZE);
-			header_index = dma_raw_data.indexOf(header_value);
-			counter_data = counter_data + 2;
+			fileData.append(dma_raw_data);
+			sensor_data_available = true;
 		}
-
-		if (processedData.size() > PACKET_SIZE)
-		{
-			if (!sensor_data_available)
-			{
-				fileData.append(processedData);
-				sensor_data_available = true;
-			}
-			processedData.remove(1, processedData.size());
-		}
+		dma_raw_data.remove(1, dma_raw_data.size());
 	}
 }
