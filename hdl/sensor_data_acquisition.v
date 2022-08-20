@@ -133,10 +133,10 @@ module sensor_data_acquisition
     data_tdata <= 0;
     data_tvalid <= 0;
     data_tlast <= 0;
-    y_value <= 0;
     c_acc <= 0;
     d_acc <= 0;
     data_counter <= 0;
+    y_value <= sensor_data_reg[3]*sensor_data_reg[3];
     case (axis_state)
       IDLE:
       begin
@@ -173,10 +173,8 @@ module sensor_data_acquisition
 
       DATA_ACQ1:
       begin
-        y_value <= sensor_data_reg[3]*sensor_data_reg[3];
         c_acc <= c_acc + y_value;
-        d_acc <= d_acc + y_value*sensor_data_index_reg[3];
-        // debug data link
+        d_acc <= d_acc + y_value*sensor_data_index_reg[4];
         processed_data <= {d_acc, c_acc};
         if (sensor_data_index_reg[3] < 1023)
         begin
