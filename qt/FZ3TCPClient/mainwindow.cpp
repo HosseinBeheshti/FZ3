@@ -16,6 +16,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 	ui->lineEdit_ip3->setText("1");
 	ui->lineEdit_ip4->setText("11");
 	ui->lineEdit_path->setText("~/");
+	QValidator *file_size_validator = new QIntValidator(1, 4000, this);
+	ui->lineEdit_file_size->setValidator(file_size_validator);
+	ui->lineEdit_file_size->setText("60");
 
 	socket = new QTcpSocket(this);
 	socket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption, 64 * 1024 * 1024);
@@ -34,7 +37,8 @@ MainWindow::~MainWindow()
 void MainWindow::readSocket()
 {
 	socket_buffer.append(socket->readAll());
-	if ((socket_buffer.size() >= 60 * 1000 * 1000) || (socket_buffer.left(16) == "A5A5A5A5A5A5A5A5"))
+	int save_file_size = (ui->lineEdit_file_size->text()).toInt() * 1000 * 1000;
+	if ((socket_buffer.size() >= save_file_size) || (socket_buffer.left(16) == "A5A5A5A5A5A5A5A5"))
 	{
 
 		ui->pushButton_path->setEnabled(false);
@@ -96,6 +100,7 @@ void MainWindow::on_pushButton_connect_clicked()
 		ui->lineEdit_ip2->setReadOnly(true);
 		ui->lineEdit_ip3->setReadOnly(true);
 		ui->lineEdit_ip4->setReadOnly(true);
+		ui->lineEdit_file_size->setReadOnly(true);
 	}
 	else
 	{
