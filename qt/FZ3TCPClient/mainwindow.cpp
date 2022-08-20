@@ -11,14 +11,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 	ui->lineEdit_ip2->setValidator(ip_validator);
 	ui->lineEdit_ip3->setValidator(ip_validator);
 	ui->lineEdit_ip4->setValidator(ip_validator);
-	ui->lineEdit_ip1->setText("10");
-	ui->lineEdit_ip2->setText("1");
-	ui->lineEdit_ip3->setText("1");
-	ui->lineEdit_ip4->setText("11");
-	ui->lineEdit_path->setText("~/");
 	QValidator *file_size_validator = new QIntValidator(1, 4000, this);
 	ui->lineEdit_file_size->setValidator(file_size_validator);
-	ui->lineEdit_file_size->setText("60");
 
 	socket = new QTcpSocket(this);
 	socket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption, 64 * 1024 * 1024);
