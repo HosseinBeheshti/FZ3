@@ -29,7 +29,6 @@ MainWindow::~MainWindow()
 {
 	if (socket->isOpen())
 		socket->close();
-	delete ui;
 }
 
 void MainWindow::readSocket()
@@ -38,6 +37,7 @@ void MainWindow::readSocket()
 	if ((socket_buffer.size() >= 60 * 1000 * 1000) || (socket_buffer.left(16) == "A5A5A5A5A5A5A5A5"))
 	{
 
+		ui->pushButton_path->setEnabled(false);
 		QString file_time = QTime::currentTime().toString("hh:mm:ss");
 		QString saveFilePath = filePath + "sensor_data_" + file_time + ".bin";
 		QFile file(saveFilePath);
@@ -48,6 +48,7 @@ void MainWindow::readSocket()
 			emit newMessage(message);
 			socket_buffer.remove(1, socket_buffer.size());
 		}
+		ui->pushButton_path->setEnabled(true);
 	}
 }
 
@@ -88,7 +89,14 @@ void MainWindow::on_pushButton_connect_clicked()
 	socket->connectToHost(server_ip, 1992);
 
 	if (socket->waitForConnected())
+	{
 		ui->statusBar->showMessage("Connected to Server");
+		ui->pushButton_connect->setEnabled(false);
+		ui->lineEdit_ip1->setReadOnly(true);
+		ui->lineEdit_ip2->setReadOnly(true);
+		ui->lineEdit_ip3->setReadOnly(true);
+		ui->lineEdit_ip4->setReadOnly(true);
+	}
 	else
 	{
 		QMessageBox::critical(this, "QTCPClient", QString("The following error occurred: %1.").arg(socket->errorString()));
