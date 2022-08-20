@@ -280,6 +280,7 @@ void MainWindow::sendDataAsync(QString receiver)
 			ui->textBrowser_receivedMessages->append(LastLogQstring);
 			std::cout << LastLogQstring.toStdString() << std::endl;
 			sendDataToClient(socket, &footer);
+			fileData.resize(1);
 			usleep(100);
 		}
 	}

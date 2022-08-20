@@ -5,22 +5,24 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 										  ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
+
+	QValidator *ip_validator = new QIntValidator(0, 255, this);
+	ui->lineEdit_ip1->setValidator(ip_validator);
+	ui->lineEdit_ip2->setValidator(ip_validator);
+	ui->lineEdit_ip3->setValidator(ip_validator);
+	ui->lineEdit_ip4->setValidator(ip_validator);
+	ui->lineEdit_ip1->setText("10");
+	ui->lineEdit_ip2->setText("1");
+	ui->lineEdit_ip3->setText("1");
+	ui->lineEdit_ip4->setText("11");
+	ui->lineEdit_path->setText("~/");
+
 	socket = new QTcpSocket(this);
 	socket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption, 64 * 1024 * 1024);
 
 	connect(this, &MainWindow::newMessage, this, &MainWindow::displayMessage);
 	connect(socket, &QTcpSocket::readyRead, this, &MainWindow::readSocket);
 	connect(socket, &QTcpSocket::disconnected, this, &MainWindow::discardSocket);
-
-    socket->connectToHost("10.1.1.11", 1992);
-
-	if (socket->waitForConnected())
-		ui->statusBar->showMessage("Connected to Server");
-	else
-	{
-		QMessageBox::critical(this, "QTCPClient", QString("The following error occurred: %1.").arg(socket->errorString()));
-		exit(EXIT_FAILURE);
-	}
 }
 
 MainWindow::~MainWindow()
@@ -33,20 +35,20 @@ MainWindow::~MainWindow()
 void MainWindow::readSocket()
 {
 	socket_buffer.append(socket->readAll());
-    if ((socket_buffer.size() >= 60*1000*1000) || (socket_buffer.left(16) == "A5A5A5A5A5A5A5A5"))
-    {
+	if ((socket_buffer.size() >= 60 * 1000 * 1000) || (socket_buffer.left(16) == "A5A5A5A5A5A5A5A5"))
+	{
 
-        QString file_time = QTime::currentTime().toString("hh:mm:ss");
-        QString filePath = "/fz3_data/sensor_data_" + file_time + ".bin";
-        QFile file(filePath);
-        if (file.open(QIODevice::WriteOnly))
-        {
-            file.write(socket_buffer);
-            QString message = QString("INFO :: Attachment from sd:%1 successfully stored on disk under the path %2").arg(socket->socketDescriptor()).arg(QString(filePath));
-            emit newMessage(message);
-            socket_buffer.remove(1, socket_buffer.size());
-        }
-    }
+		QString file_time = QTime::currentTime().toString("hh:mm:ss");
+		QString saveFilePath = filePath + "sensor_data_" + file_time + ".bin";
+		QFile file(saveFilePath);
+		if (file.open(QIODevice::WriteOnly))
+		{
+			file.write(socket_buffer);
+			QString message = QString("INFO :: Attachment from sd:%1 successfully stored on disk under the path %2").arg(socket->socketDescriptor()).arg(QString(saveFilePath));
+			emit newMessage(message);
+			socket_buffer.remove(1, socket_buffer.size());
+		}
+	}
 }
 
 void MainWindow::discardSocket()
@@ -78,4 +80,24 @@ void MainWindow::displayError(QAbstractSocket::SocketError socketError)
 void MainWindow::displayMessage(const QString &str)
 {
 	ui->textBrowser_receivedMessages->append(str);
+}
+
+void MainWindow::on_pushButton_connect_clicked()
+{
+	QString server_ip = ui->lineEdit_ip4->text() + "." + ui->lineEdit_ip3->text() + "." + ui->lineEdit_ip2->text() + "." + ui->lineEdit_ip1->text();
+	socket->connectToHost(server_ip, 1992);
+
+	if (socket->waitForConnected())
+		ui->statusBar->showMessage("Connected to Server");
+	else
+	{
+		QMessageBox::critical(this, "QTCPClient", QString("The following error occurred: %1.").arg(socket->errorString()));
+		exit(EXIT_FAILURE);
+	}
+}
+
+void MainWindow::on_pushButton_path_clicked()
+{
+	filePath = QFileDialog::getSaveFileName(this, tr("Set path"), QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/");
+	ui->lineEdit_path->setText(filePath);
 }

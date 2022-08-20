@@ -14,6 +14,7 @@
 #include <QTcpSocket>
 #include <QTime>
 #include <QThread>
+#include <QIntValidator>
 
 namespace Ui
 {
@@ -36,10 +37,15 @@ private slots:
 
 	void displayMessage(const QString &str);
 
+    void on_pushButton_connect_clicked();
+
+    void on_pushButton_path_clicked();
+
 private:
 	Ui::MainWindow *ui;
 	QByteArray socket_buffer;
 	QTcpSocket *socket;
+    QString filePath;
 };
 
 #endif // MAINWINDOW_H
