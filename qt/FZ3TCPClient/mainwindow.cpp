@@ -32,6 +32,7 @@ MainWindow::~MainWindow()
 {
 	if (socket->isOpen())
 		socket->close();
+	delete ui;
 }
 
 void MainWindow::readSocket()
@@ -40,8 +41,6 @@ void MainWindow::readSocket()
 	int save_file_size = (ui->lineEdit_file_size->text()).toInt() * 1000 * 1000;
 	if ((socket_buffer.size() >= save_file_size) || (socket_buffer.left(16) == "A5A5A5A5A5A5A5A5"))
 	{
-
-		ui->pushButton_path->setEnabled(false);
 		QString file_time = QTime::currentTime().toString("hh:mm:ss");
 		QString saveFilePath = filePath + "sensor_data_" + file_time + ".bin";
 		QFile file(saveFilePath);
@@ -52,7 +51,6 @@ void MainWindow::readSocket()
 			emit newMessage(message);
 			socket_buffer.remove(1, socket_buffer.size());
 		}
-		ui->pushButton_path->setEnabled(true);
 	}
 }
 
