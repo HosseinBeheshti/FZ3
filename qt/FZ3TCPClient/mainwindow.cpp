@@ -36,7 +36,7 @@ void MainWindow::readSocket()
 	if ((socket_buffer.size() >= save_file_size) || (socket_buffer.left(16) == "A5A5A5A5A5A5A5A5"))
 	{
 		QString file_time = QTime::currentTime().toString("hh:mm:ss");
-		QString saveFilePath = filePath + "sensor_data_" + file_time + ".bin";
+		QString saveFilePath = filePath + "/sensor_data_" + file_time + ".bin";
 		QFile file(saveFilePath);
 		if (file.open(QIODevice::WriteOnly))
 		{
@@ -81,7 +81,7 @@ void MainWindow::displayMessage(const QString &str)
 
 void MainWindow::on_pushButton_connect_clicked()
 {
-	QString server_ip = ui->lineEdit_ip4->text() + "." + ui->lineEdit_ip3->text() + "." + ui->lineEdit_ip2->text() + "." + ui->lineEdit_ip1->text();
+	QString server_ip = ui->lineEdit_ip1->text() + "." + ui->lineEdit_ip2->text() + "." + ui->lineEdit_ip3->text() + "." + ui->lineEdit_ip4->text();
 	socket->connectToHost(server_ip, 1992);
 
 	if (socket->waitForConnected())
@@ -103,6 +103,6 @@ void MainWindow::on_pushButton_connect_clicked()
 
 void MainWindow::on_pushButton_path_clicked()
 {
-	filePath = QFileDialog::getSaveFileName(this, tr("Set path"), QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/");
+	filePath = QFileDialog::getExistingDirectory(this, tr("Open Directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 	ui->lineEdit_path->setText(filePath);
 }
