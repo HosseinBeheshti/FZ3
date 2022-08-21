@@ -60,9 +60,10 @@ module sensor_data_acquisition
   reg sensor_data_valid_reg[5:0];
   reg [31:0] time_counter;
   localparam [31:0] HEADER_VALUE = 32'hAAAAAAAA;
+  localparam [31:0] DUMMY_VALUE = 32'h00000000;
   localparam [31:0] FOOTER_VALUE = 32'h55555555;
   localparam [31:0] TLAST_VALUE = 32'hBBBBBBBB;
-  localparam [3:0]  IDLE = 0, HEADER = 1, TIME_STAMP = 2, DATA_ACQ1 = 3, DATA_ACQ2 = 4, RAW_DATA = 5, FOOTER = 6, TLAST_ASSERT = 7;
+  localparam [3:0]  IDLE = 0, HEADER = 1, DUMMY = 2, TIME_STAMP = 3, DATA_ACQ1 = 4, DATA_ACQ2 = 5, RAW_DATA = 6, FOOTER = 7, TLAST_ASSERT = 8;
   reg [3:0] axis_state = IDLE;
   reg [31:0] raw_data_data;
   reg [95:0] processed_data;
@@ -154,8 +155,16 @@ module sensor_data_acquisition
       begin
         data_tdata <= HEADER_VALUE;
         data_tvalid <= 1;
+        axis_state <= DUMMY;
+      end
+
+      DUMMY:
+      begin
+        data_tdata <= DUMMY_VALUE;
+        data_tvalid <= 1;
         axis_state <= TIME_STAMP;
       end
+
 
       TIME_STAMP:
       begin

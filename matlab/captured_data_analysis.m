@@ -17,9 +17,8 @@ valid_packet_index = find(header_start(1:max_length) + 20 == footer_start(1:max_
 valid_header_end = header_start(valid_packet_index)' +3;
 header_end_diff = diff(valid_header_end);
 time_stamp = ts.* get_data_slice(data_input, valid_header_end + 1, 4);
-time_stamp_diff = diff(time_stamp);
 c_value = get_data_slice(data_input, valid_header_end + 5, 6);
 d_value = get_data_slice(data_input, valid_header_end + 10, 6);
-s_value = d_value / c_value;
+s_value = d_value ./ c_value;
 plot(s_value, time_stamp);
 %%
