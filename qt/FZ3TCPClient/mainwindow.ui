@@ -139,6 +139,17 @@
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>lineEdit_ip1</tabstop>
+  <tabstop>lineEdit_ip2</tabstop>
+  <tabstop>lineEdit_ip3</tabstop>
+  <tabstop>lineEdit_ip4</tabstop>
+  <tabstop>pushButton_connect</tabstop>
+  <tabstop>lineEdit_path</tabstop>
+  <tabstop>pushButton_path</tabstop>
+  <tabstop>lineEdit_file_size</tabstop>
+  <tabstop>textBrowser_receivedMessages</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

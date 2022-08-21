@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 	ui->pushButton_stopSendData->setEnabled(false);
 	m_server = new QTcpServer();
 	sensor_data_stream = 0;
-
+	connect(this, &MainWindow::showMessageBox, this, &MainWindow::on_showMessageBox);
 	if (m_server->listen(QHostAddress::Any, 1992))
 	{
 		connect(this, &MainWindow::newMessage, this, &MainWindow::displayMessage);
@@ -45,7 +45,7 @@ void MainWindow::newConnection()
 
 void MainWindow::appendToSocketList(QTcpSocket *socket)
 {
-	connection_set.insert(socket);
+	connection_set.insert(QString::number(socket->socketDescriptor()), socket);
 	connect(socket, &QTcpSocket::disconnected, this, &MainWindow::discardSocket);
 	ui->comboBox_receiver->addItem(QString::number(socket->socketDescriptor()));
 	displayMessage(QString("INFO :: Client with sockd:%1 has just entered the room").arg(socket->socketDescriptor()));
@@ -54,11 +54,11 @@ void MainWindow::appendToSocketList(QTcpSocket *socket)
 void MainWindow::discardSocket()
 {
 	QTcpSocket *socket = reinterpret_cast<QTcpSocket *>(sender());
-	QSet<QTcpSocket *>::iterator it = connection_set.find(socket);
+	auto it = connection_set.find(QString::number(socket->socketDescriptor()));
 	if (it != connection_set.end())
 	{
 		displayMessage(QString("INFO :: A client has just left the room").arg(socket->socketDescriptor()));
-		connection_set.remove(*it);
+		connection_set.erase(it);
 	}
 	refreshComboBox();
 
@@ -230,10 +230,10 @@ void MainWindow::sendDataToClient(QTcpSocket *socket, QByteArray *fileDataPtr)
 			}
 		}
 		else
-			QMessageBox::critical(this, "QTCPServer", "Socket doesn't seem to be opened");
+			emit showMessageBox("QTCPServer", "Socket doesn't seem to be opened");
 	}
 	else
-		QMessageBox::critical(this, "QTCPServer", "Not connected");
+		emit showMessageBox("QTCPServer", "Not connected");
 }
 
 void MainWindow::on_pushButton_sendData_clicked()
@@ -242,9 +242,16 @@ void MainWindow::on_pushButton_sendData_clicked()
 	ui->pushButton_sendData->setEnabled(false);
 	ui->pushButton_stopSendData->setEnabled(true);
 	sensor_data_stream = true;
-
-	std::thread sendthread(&MainWindow::sendDataAsync, this, receiver);
-	sendthread.detach();
+	if (connection_set.contains(ui->comboBox_receiver->currentText()))
+	{
+		_socket = connection_set[ui->comboBox_receiver->currentText()];
+		std::thread sendthread(&MainWindow::sendDataAsync, this, receiver);
+		sendthread.detach();
+	}
+	else
+	{
+		on_showMessageBox("oola", "labola");
+	}
 }
 
 void MainWindow::on_pushButton_stopSendData_clicked()
@@ -256,33 +263,29 @@ void MainWindow::on_pushButton_stopSendData_clicked()
 
 void MainWindow::sendDataAsync(QString receiver)
 {
-
-	foreach (QTcpSocket *socket, connection_set)
+	if (_socket->socketDescriptor() == receiver.toLongLong())
 	{
-		if (socket->socketDescriptor() == receiver.toLongLong())
+		while (sensor_data_stream)
 		{
-			while (sensor_data_stream)
+			if (sensor_data_available)
 			{
-				if (sensor_data_available)
-				{
-					sendDataToClient(socket, &fileData);
-					fileData.resize(1);
-					sensor_data_available = false;
-				}
-				else
-				{
-					usleep(10);
-				}
+				sendDataToClient(_socket, &fileData);
+				fileData.clean();
+				sensor_data_available = false;
 			}
-			QString tmpFooter = "A5A5A5A5A5A5A5A5";
-			QByteArray footer = tmpFooter.toLocal8Bit();
-			LastLogQstring = "send footer";
-			ui->textBrowser_receivedMessages->append(LastLogQstring);
-			std::cout << LastLogQstring.toStdString() << std::endl;
-			sendDataToClient(socket, &footer);
-			fileData.resize(1);
-			usleep(100);
+			else
+			{
+				usleep(10);
+			}
 		}
+		QString tmpFooter = "A5A5A5A5A5A5A5A5";
+		QByteArray footer = tmpFooter.toLocal8Bit();
+		LastLogQstring = "send footer";
+		QMetaObject::invokeMethod(ui->textBrowser_receivedMessages, "append", Qt::QueuedConnection, Q_ARG(QString, LastLogQstring));
+		std::cout << LastLogQstring.toStdString() << std::endl;
+		sendDataToClient(_socket, &footer);
+		fileData.clean(1);
+		usleep(100);
 	}
 }
 
@@ -303,11 +306,16 @@ void MainWindow::getSensorData(bool dma_init_done)
 		}
 		QByteArray dma_raw_data(QByteArray::fromRawData(rx_buf, rx_size));
 
-		if (!sensor_data_available)
+		if (!sensor_data_available && sensor_data_stream)
 		{
 			fileData.append(dma_raw_data);
 			sensor_data_available = true;
 		}
 		dma_raw_data.remove(1, dma_raw_data.size());
 	}
+}
+
+void MainWindow::on_showMessageBox(const QString &title, const QString &text)
+{
+	QMessageBox::critical(this, title, text);
 }

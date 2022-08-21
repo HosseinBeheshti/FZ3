@@ -11,6 +11,7 @@
 #include <QStandardPaths>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QMetaObject>
 
 #include <iostream>
 #include <stdlib.h>
@@ -54,6 +55,7 @@ public:
 
 signals:
 	void newMessage(QString);
+    void showMessageBox(const QString &title, const QString &text);
 private slots:
 	void newConnection();
 	void appendToSocketList(QTcpSocket *socket);
@@ -68,11 +70,12 @@ private slots:
 	void on_pushButton_sendData_clicked();
 	void sendDataAsync(QString receiver);
 	void getSensorData(bool dma_init_done);
+    void on_showMessageBox(const QString &title, const QString &text);
 
 private:
 	Ui::MainWindow *ui;
 	QTcpServer *m_server;
-	QSet<QTcpSocket *> connection_set;
+    QMap<QString, QTcpSocket *> connection_set;
 	int rc;
 	int tx_channel, rx_channel;
 	int num_transfers = 10;
@@ -88,6 +91,7 @@ private:
 	QByteArray fileData;
 	std::atomic_bool sensor_data_stream;
 	std::atomic_bool sensor_data_available;
+    QTcpSocket *_socket;
 };
 
 #endif // MAINWINDOW_H
