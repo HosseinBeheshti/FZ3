@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>373</width>
-    <height>368</height>
+    <width>530</width>
+    <height>320</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,20 +18,101 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_2">
-    <item row="1" column="0">
+    <item row="2" column="6">
+     <widget class="QPushButton" name="pushButton_path">
+      <property name="text">
+       <string>Borrow</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0" colspan="7">
      <widget class="QTextBrowser" name="textBrowser_receivedMessages">
       <property name="styleSheet">
        <string notr="true"/>
       </property>
      </widget>
     </item>
-    <item row="2" column="0">
-     <layout class="QGridLayout" name="gridLayout"/>
+    <item row="0" column="4">
+     <widget class="QLineEdit" name="lineEdit_ip3">
+      <property name="text">
+       <string>1</string>
+      </property>
+     </widget>
     </item>
-    <item row="0" column="0">
+    <item row="4" column="0">
      <widget class="QLabel" name="label">
       <property name="text">
        <string>log console:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="5">
+     <widget class="QLineEdit" name="lineEdit_ip4">
+      <property name="text">
+       <string>11</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="2">
+     <widget class="QLineEdit" name="lineEdit_ip1">
+      <property name="text">
+       <string>10</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>file path:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2" colspan="4">
+     <widget class="QLineEdit" name="lineEdit_path">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>server IP:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="3">
+     <widget class="QLineEdit" name="lineEdit_ip2">
+      <property name="text">
+       <string>1</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="6">
+     <widget class="QPushButton" name="pushButton_connect">
+      <property name="text">
+       <string>connect</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>file size:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="2">
+     <widget class="QLineEdit" name="lineEdit_file_size">
+      <property name="text">
+       <string>60</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="3">
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>MB</string>
       </property>
      </widget>
     </item>
@@ -42,7 +123,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>373</width>
+     <width>530</width>
      <height>22</height>
     </rect>
    </property>
@@ -58,6 +139,17 @@
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>lineEdit_ip1</tabstop>
+  <tabstop>lineEdit_ip2</tabstop>
+  <tabstop>lineEdit_ip3</tabstop>
+  <tabstop>lineEdit_ip4</tabstop>
+  <tabstop>pushButton_connect</tabstop>
+  <tabstop>lineEdit_path</tabstop>
+  <tabstop>pushButton_path</tabstop>
+  <tabstop>lineEdit_file_size</tabstop>
+  <tabstop>textBrowser_receivedMessages</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
