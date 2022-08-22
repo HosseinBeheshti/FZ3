@@ -1,5 +1,8 @@
 build/*
+.Xil/*
+.vscode/*
 artifacts/*
+matlab/sensor_data.bin
 hls/dma_lb_axis_switch/dma_lb_axis_switch/*
 log_data/*
 qt/sdk/*

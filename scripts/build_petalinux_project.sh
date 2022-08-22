@@ -36,10 +36,10 @@ petalinux-package --sysroot
 # 6) -> kits -> Debugger -> Add -> named debugger Multiarch_GDB / path:  /usr/bin/gdb-multiarch
 # Note: Before this step turn on the board and connect it to the internet.
 # 7) -> kits -> Add -> 
-#       Name: UltraZedEV
+#       Name: FZ3
 #       sysroot: <project path>/images/linux/sdk/sysroots
 #       Device type: Generic Linux Device 
-#       Device: UltraZedEV
+#       Device: FZ3
 #       compiler: C -> <path>/aarch64-linux-gnu-g / <path>/aarch64-linux-gnu-g++
 #       debugger: Multiarch_GDB
 #       Qt version: <path>/Qt 5.13.2 (system)
