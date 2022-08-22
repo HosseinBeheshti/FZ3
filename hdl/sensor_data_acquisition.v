@@ -58,12 +58,11 @@ module sensor_data_acquisition
   reg [11:0] sensor_data_reg[5:0];
   reg [9:0] sensor_data_index_reg[5:0];
   reg sensor_data_valid_reg[5:0];
-  reg [31:0] time_counter;
+  reg [47:0] time_counter;
   localparam [31:0] HEADER_VALUE = 32'hAAAAAAAA;
-  localparam [31:0] DUMMY_VALUE = 32'h00000000;
   localparam [31:0] FOOTER_VALUE = 32'h55555555;
   localparam [31:0] TLAST_VALUE = 32'hBBBBBBBB;
-  localparam [3:0]  IDLE = 0, HEADER = 1, DUMMY = 2, TIME_STAMP = 3, DATA_ACQ1 = 4, DATA_ACQ2 = 5, RAW_DATA = 6, FOOTER = 7, TLAST_ASSERT = 8;
+  localparam [3:0]  IDLE = 0, HEADER = 1, TIME_STAMP1 = 2, TIME_STAMP2 = 3, DATA_ACQ1 = 4, DATA_ACQ2 = 5, RAW_DATA = 6, FOOTER = 7, TLAST_ASSERT = 8;
   reg [3:0] axis_state = IDLE;
   reg [31:0] raw_data_data;
   reg [95:0] processed_data;
@@ -155,20 +154,20 @@ module sensor_data_acquisition
       begin
         data_tdata <= HEADER_VALUE;
         data_tvalid <= 1;
-        axis_state <= DUMMY;
+        axis_state <= TIME_STAMP1;
       end
 
-      DUMMY:
+      TIME_STAMP1:
       begin
-        data_tdata <= DUMMY_VALUE;
+        data_tdata <= {time_counter[15:0],16'd0};
         data_tvalid <= 1;
-        axis_state <= TIME_STAMP;
+        axis_state <= TIME_STAMP2;
       end
 
 
-      TIME_STAMP:
+      TIME_STAMP2:
       begin
-        data_tdata <= time_counter;
+        data_tdata <= time_counter[47:16];
         data_tvalid <= 1;
         if (send_raw_data)
         begin
