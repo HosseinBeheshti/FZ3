@@ -250,7 +250,7 @@ void MainWindow::on_pushButton_sendData_clicked()
 	}
 	else
 	{
-		on_showMessageBox("oola", "labola");
+		on_showMessageBox("Error", "No client");
 	}
 }
 
@@ -270,7 +270,7 @@ void MainWindow::sendDataAsync(QString receiver)
 			if (sensor_data_available)
 			{
 				sendDataToClient(_socket, &fileData);
-                fileData.clear();
+				fileData.clear();
 				sensor_data_available = false;
 			}
 			else
@@ -284,7 +284,7 @@ void MainWindow::sendDataAsync(QString receiver)
 		QMetaObject::invokeMethod(ui->textBrowser_receivedMessages, "append", Qt::QueuedConnection, Q_ARG(QString, LastLogQstring));
 		std::cout << LastLogQstring.toStdString() << std::endl;
 		sendDataToClient(_socket, &footer);
-        fileData.clear();
+		fileData.clear();
 		usleep(100);
 	}
 }
@@ -295,7 +295,7 @@ void MainWindow::getSensorData(bool dma_init_done)
 	int counter_data = 0;
 	while (dma_init_done)
 	{
-		memset(rx_buf,0,rx_size);
+		memset(rx_buf, 0, rx_size);
 		/* This performs a one-way transfer over AXI DMA, the direction being specified
 		 * by the user. The user determines if this is blocking or not with `wait. */
 		rc = axidma_oneway_transfer(axidma_dev, rx_channel, rx_buf, rx_size, true);

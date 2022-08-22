@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 	ui->lineEdit_ip4->setValidator(ip_validator);
 	QValidator *file_size_validator = new QIntValidator(1, 4000, this);
 	ui->lineEdit_file_size->setValidator(file_size_validator);
+	ui->pushButton_connect->setEnabled(false);
 
 	socket = new QTcpSocket(this);
 	socket->setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption, 64 * 1024 * 1024);
@@ -20,6 +21,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 	connect(this, &MainWindow::newMessage, this, &MainWindow::displayMessage);
 	connect(socket, &QTcpSocket::readyRead, this, &MainWindow::readSocket);
 	connect(socket, &QTcpSocket::disconnected, this, &MainWindow::discardSocket);
+
+	QString message = QString("Please select file path");
+	emit newMessage(message);
 }
 
 MainWindow::~MainWindow()
@@ -33,7 +37,7 @@ void MainWindow::readSocket()
 {
 	socket_buffer.append(socket->readAll());
 	int save_file_size = (ui->lineEdit_file_size->text()).toInt() * 1000 * 1000;
-	if ((socket_buffer.size() >= save_file_size) || (socket_buffer.left(16) == "A5A5A5A5A5A5A5A5"))
+	if ((socket_buffer.size() >= save_file_size) || (socket_buffer.right(16) == "A5A5A5A5A5A5A5A5"))
 	{
 		QString file_time = QTime::currentTime().toString("hh:mm:ss");
 		QString saveFilePath = filePath + "/sensor_data_" + file_time + ".bin";
@@ -93,6 +97,8 @@ void MainWindow::on_pushButton_connect_clicked()
 		ui->lineEdit_ip3->setReadOnly(true);
 		ui->lineEdit_ip4->setReadOnly(true);
 		ui->lineEdit_file_size->setReadOnly(true);
+		QString message = QString("NOTE: server ip and file size are fixed after connection");
+		emit newMessage(message);
 	}
 	else
 	{
@@ -105,4 +111,5 @@ void MainWindow::on_pushButton_path_clicked()
 {
 	filePath = QFileDialog::getExistingDirectory(this, tr("Open Directory"), "/home", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 	ui->lineEdit_path->setText(filePath);
+	ui->pushButton_connect->setEnabled(true);
 }
