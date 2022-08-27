@@ -28,4 +28,13 @@ for i = 1:length(valid_header_end)
     sensor_raw_data(i, (2:2:1024)) = get_data_slice(data_input, (1:4:2048) + valid_header_end(i) + 8, 2);
 end
 
+%% plot 
+hold on;
+for i=1:10
+    pause(1);
+    plot(sensor_raw_data(i,1:1024));
+end
+hold off;
+
+
 %%
