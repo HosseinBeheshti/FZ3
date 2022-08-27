@@ -38,7 +38,7 @@
 #include <atomic>
 #include <thread>
 
-#define BUFFER_SIZE 1
+#define BUFFER_SIZE 2
 
 namespace Ui
 {
