@@ -85,7 +85,7 @@ module s15611_driver
       mclk_counter <= mclk_counter + 1;
     end
 
-    if (mclk_counter <=  MASTER_START_PULSE_HIGH_PERIOD-1)
+    if (mclk_counter <=  master_start_pulse_high_period-1)
     begin
       s15611_mst <= 1;
     end
