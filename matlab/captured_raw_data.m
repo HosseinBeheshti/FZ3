@@ -3,7 +3,7 @@ close all;
 clc;
 %% read data
 fileID = fopen('sensor_data.bin');
-data_input = fread(fileID, 1e6,'uint8', 'ieee-be');
+data_input = fread(fileID, 'uint8', 'ieee-be');
 %% extract processed data
 fs = 40e6;
 ts = 1 / fs;
