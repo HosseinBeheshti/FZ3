@@ -20,16 +20,15 @@
 
 module s15611_driver
   #(
-     parameter MASTER_CLK_MHZ = 100,
      parameter MCLK_MHZ = 40,
      parameter NUMBER_OF_PIXEL = 1024,
-     parameter MASTER_START_PULSE_PERIOD = 1162,
-     parameter MASTER_START_PULSE_HIGH_PERIOD = 167,
      parameter CDC_REG_LENGTH = 4
    )
    (
      input master_clock,
      input resetn,
+     input [31:0] master_start_pulse_period,
+     input [31:0] master_start_pulse_high_period,
      // sensor interface
      output s15611_mclk,
      output logic s15611_mst,
@@ -55,7 +54,7 @@ module s15611_driver
 
   genvar i;
   logic sensor_clock;
-  logic [15:0] mclk_counter;
+  logic [31:0] mclk_counter;
   logic data_capture_triger;
   logic [15:0] pixel_counter;
   enum logic [3:0] {BLANKING_PERIOD, SYNC_CLK1, SYNC_CLK2, CAPTURE_DATA} state;
@@ -77,7 +76,7 @@ module s15611_driver
   assign s15611_mclk = master_clock;
   always_ff @(posedge master_clock)
   begin
-    if(mclk_counter >= MASTER_START_PULSE_PERIOD-1)
+    if(mclk_counter >= master_start_pulse_period-1)
     begin
       mclk_counter <= 0;
     end
@@ -86,7 +85,7 @@ module s15611_driver
       mclk_counter <= mclk_counter + 1;
     end
 
-    if (mclk_counter <=  MASTER_START_PULSE_HIGH_PERIOD-1)
+    if (mclk_counter <=  master_start_pulse_high_period-1)
     begin
       s15611_mst <= 1;
     end
