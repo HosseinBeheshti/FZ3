@@ -25,6 +25,8 @@ module sensor_data_acquisition
     input resetn,
     input send_raw_data,
     input [15:0] number_of_packet,
+    input [31:0] master_start_pulse_period,
+    input [31:0] master_start_pulse_high_period,
     // sensor interface
     output s15611_mclk,
     output s15611_mst,
@@ -76,6 +78,8 @@ module sensor_data_acquisition
                 (
                   .master_clock(master_clock),
                   .resetn(resetn),
+                  .master_start_pulse_period(master_start_pulse_period),
+                  .master_start_pulse_high_period(master_start_pulse_high_period),
                   // sensor interface
                   .s15611_mclk(s15611_mclk),
                   .s15611_mst(s15611_mst),
